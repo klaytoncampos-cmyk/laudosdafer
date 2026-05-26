@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laudos da Fer — Gerador de Laudos de Ecocardiograma</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0c2340;--navy2:#1a3a6b;
+  --teal:#0d9488;--teal2:#0f766e;--teal-pale:#f0fdfa;
+  --bg:#f6f8fb;--card:#fff;--surface:#fafbfc;
+  --text:#101828;--text2:#344054;--muted:#667085;
+  --border:#e4e7ec;--border2:#d0d5dd;
+  --accent:#0066cc;--accent-pale:#e8f1fb;
+  --warn:#b45309;--warn-pale:#fef3c7;
+  --danger:#b42318;--danger-pale:#fee4e2;
+  --success:#039855;--success-pale:#d1fadf;
+  --crit:#dc2626;--crit-pale:#fee2e2;
+  --auto:#7c3aed;--auto-pale:#f3e8ff;
+  --radius:10px;
+  --sh:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
+  --sh-fab:0 6px 16px rgba(13,148,136,.35),0 2px 4px rgba(0,0,0,.1);
+}
+[data-theme="dark"]{
+  --navy:#0a1628;--navy2:#0f1f3a;
+  --teal:#14b8a6;--teal2:#0d9488;--teal-pale:#042f2e;
+  --bg:#0a0e1a;--card:#111827;--surface:#0f1623;
+  --text:#f3f4f6;--text2:#cbd5e1;--muted:#94a3b8;
+  --border:#1f2937;--border2:#374151;
+  --accent:#3b82f6;--accent-pale:#172554;
+  --warn:#fbbf24;--warn-pale:#3c2410;
+  --danger:#ef4444;--danger-pale:#3a1212;
+  --success:#22c55e;--success-pale:#0f2e1c;
+  --crit:#f87171;--crit-pale:#3b1212;
+  --auto:#a78bfa;--auto-pale:#2e1a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;font-size:14px;line-height:1.55;color:var(--text);background:var(--bg);transition:background .2s}
+body[data-density="compact"]{font-size:13px}
+#login{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:var(--card);border-radius:16px;padding:48px 40px;width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.logo{font-weight:800;font-size:28px;color:var(--navy);letter-spacing:-.02em;margin-bottom:6px}
+[data-theme="dark"] .logo{color:var(--text)}
+.logo-mark{color:var(--teal);margin-right:2px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
+.login-box input{width:100%;border:1.5px solid var(--border2);border-radius:10px;padding:13px 16px;font-family:'Inter',sans-serif;font-size:15px;outline:none;margin-bottom:14px;background:var(--card);color:var(--text)}
+.login-box input:focus{border-color:var(--teal)}
+.login-box button{width:100%;background:var(--teal);color:#fff;border:none;border-radius:10px;padding:13px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:var(--teal2)}
+.login-error{color:var(--danger);font-size:13px;margin-top:10px;min-height:18px}
+#app{display:none;min-height:100vh}
+#app.shown{display:block}
+.topbar{background:var(--navy);color:#fff;padding:0 18px;height:54px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50}
+.topbar .logo{color:#fff;font-size:17px;margin:0;flex-shrink:0}
+.tb-tabs{display:flex;gap:3px}
+.tb-tab{background:transparent;border:none;color:rgba(255,255,255,.6);padding:7px 13px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500}
+.tb-tab.active{color:#fff;background:rgba(255,255,255,.1);font-weight:600}
+.tb-actions{display:flex;gap:6px;margin-left:auto;align-items:center}
+.tb-btn{background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px}
+.tb-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.tb-btn.primary{background:var(--teal);border-color:var(--teal)}
+.tb-btn.primary:hover{background:var(--teal2)}
+.tb-btn.danger:hover{background:var(--danger);border-color:var(--danger)}
+.tb-btn.icon{padding:6px 9px}
+.sticky-pat{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 18px;display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--text2);position:sticky;top:54px;z-index:40;flex-wrap:wrap}
+.pat-item{display:flex;align-items:center;gap:6px}
+.pat-item .lbl{color:var(--muted);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em}
+.pat-item .val{font-weight:600;color:var(--text)}
+.pat-item.crit .val{color:var(--crit)}
+.sep{width:1px;height:14px;background:var(--border2)}
+.work{display:grid;grid-template-columns:200px 1fr 520px;height:calc(100vh - 54px - 39px)}
+.nav-pane{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:14px 10px 80px}
+.form-pane{overflow-y:auto;padding:16px 20px 100px}
+.preview-pane{background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.nav-section{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text2)}
+.nav-section:hover{background:var(--bg)}
+.nav-section.active{background:var(--teal-pale);color:var(--teal2);font-weight:600}
+.nav-num{flex-shrink:0;width:18px;height:18px;border-radius:5px;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.nav-section.active .nav-num{background:var(--teal);color:#fff}
+.nav-status{margin-left:auto;font-size:13px;line-height:1}
+.nav-section.altered .nav-status{color:var(--warn)}
+.nav-section.crit .nav-status{color:var(--crit)}
+.nav-section.normal .nav-status{color:var(--success)}
+.nav-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-divider{height:1px;background:var(--border);margin:10px 6px}
+.section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:11px;overflow:hidden;box-shadow:var(--sh);transition:opacity .2s}
+.section.focused{box-shadow:0 0 0 2px var(--teal),var(--sh)}
+.sec-head{display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
+.sec-num{width:22px;height:22px;border-radius:5px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex-shrink:0}
+.sec-title{font-size:13px;font-weight:600;flex:1;letter-spacing:-.01em}
+.sec-status{font-size:10.5px;font-weight:600;padding:2.5px 9px;border-radius:99px}
+.sec-status.normal{background:var(--success-pale);color:var(--success)}
+.sec-status.alterado{background:var(--warn-pale);color:var(--warn)}
+.sec-status.crit{background:var(--crit-pale);color:var(--crit)}
+.sec-body{padding:13px 14px}
+body[data-density="compact"] .sec-body{padding:10px 12px}
+body[data-density="compact"] .section{margin-bottom:8px}
+.toggle{display:inline-flex;background:var(--bg);padding:3px;border-radius:8px;margin-bottom:11px;gap:2px}
+.toggle button{background:transparent;border:none;padding:5px 13px;border-radius:6px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer}
+.toggle button.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin-bottom:9px}
+.field-row.cols-2{grid-template-columns:1fr 1fr}
+.field-row.cols-3{grid-template-columns:repeat(3,1fr)}
+.field-row.cols-4{grid-template-columns:repeat(4,1fr)}
+.fld label{display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1.5px solid var(--border2);border-radius:6px;padding:8px 10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;background:var(--card)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+.fld textarea{resize:vertical;min-height:54px;line-height:1.5}
+.fld-suffix{position:relative}
+.fld-suffix input{padding-right:34px}
+.fld-suffix .suffix{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:500;pointer-events:none}
+.fld-calc input{background:var(--teal-pale);font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--teal2)}
+.fld-crit input{border-color:var(--crit);background:var(--crit-pale)}
+.opts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:5px;margin-bottom:9px}
+.opts-grid.dense{grid-template-columns:repeat(auto-fit,minmax(95px,1fr))}
+.opt-chip{display:flex;align-items:center;justify-content:center;text-align:center;padding:7px 10px;border:1.5px solid var(--border2);border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;background:var(--card);color:var(--text2);user-select:none;line-height:1.3;position:relative;transition:all .15s}
+.opt-chip:hover{border-color:var(--teal);color:var(--teal2)}
+.opt-chip.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+.opt-chip.auto:not(.sel){border-color:var(--auto);color:var(--auto);background:var(--auto-pale)}
+.opt-chip.auto::before{content:'auto';position:absolute;top:-6px;right:5px;font-size:7.5px;font-weight:700;background:var(--auto);color:#fff;padding:1px 5px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
+.opt-chip.auto.sel::before{display:none}
+.opt-chip input{display:none}
+.opt-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:block}
+.calc-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:9px;background:var(--teal-pale);border:1px solid var(--teal);border-radius:7px;padding:9px 12px;margin-top:5px}
+.calc-item{font-size:11.5px}
+.calc-item .lbl{color:var(--teal2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;display:block}
+.calc-item .val{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text);font-size:13px}
+.calc-item .ref{font-size:10px;color:var(--muted);margin-left:3px}
+.crit-alert{background:var(--crit-pale);border:1.5px solid var(--crit);border-radius:7px;padding:9px 12px;margin:9px 0;font-size:12px;color:var(--crit);font-weight:500}
+.warn-alert{background:var(--warn-pale);border:1.5px solid var(--warn);border-radius:7px;padding:9px 12px;margin:9px 0;font-size:12px;color:var(--warn);font-weight:500}
+.sugest-row{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 4px;padding:8px 9px;background:linear-gradient(to right,var(--auto-pale),transparent);border-left:2.5px solid var(--auto);border-radius:5px;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sugest-label{font-size:9.5px;font-weight:700;color:var(--auto);text-transform:uppercase;letter-spacing:.05em;width:100%;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.sugest-chip{font-size:11.5px;background:var(--card);border:1px solid var(--auto);color:var(--auto);padding:4px 9px;border-radius:99px;cursor:pointer;font-weight:500}
+.sugest-chip:hover{background:var(--auto);color:#fff}
+.preview-head{padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.preview-head h2{font-size:13px;font-weight:700;text-transform:uppercase}
+.preview-head .meta{font-size:11px;color:var(--muted)}
+.preview-body{flex:1;overflow-y:auto;padding:18px 22px 100px;font-size:12.5px;line-height:1.7;color:var(--text);background:var(--card)}
+.p-title{font-weight:700;font-size:13px;color:var(--navy);margin-bottom:11px;padding-bottom:7px;border-bottom:1.5px solid var(--border)}
+[data-theme="dark"] .p-title{color:var(--text)}
+.p-section{margin-bottom:6px}
+.p-label{font-weight:700;color:var(--navy);display:inline}
+[data-theme="dark"] .p-label{color:var(--text)}
+.p-text{display:inline;color:var(--text2)}
+.p-measures{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--surface);border-radius:5px;padding:9px 12px;margin-bottom:7px;border:1px solid var(--border);line-height:1.7}
+.p-measures .ml{font-weight:600;color:var(--text2)}
+.p-concl{margin-top:12px;padding:12px;border:1.5px solid var(--teal);border-radius:7px;background:var(--teal-pale)}
+.p-concl .p-label{color:var(--teal2)}
+.fab-wrap{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
+.fab{background:var(--teal);color:#fff;border:none;border-radius:99px;padding:13px 22px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:var(--sh-fab);display:flex;align-items:center;gap:8px}
+.fab:hover{transform:translateY(-2px)}
+.fab.copied{background:var(--success)}
+.fab.secondary{background:var(--card);color:var(--text2);border:1.5px solid var(--border2);box-shadow:var(--sh);padding:10px 14px}
+.fab.secondary:hover{border-color:var(--danger);color:var(--danger)}
+.hint{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px}
+.divider{height:1px;background:var(--border);margin:11px 0}
+.bullseye-wrap{display:flex;gap:16px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px;margin-top:7px}
+.bullseye-svg path{cursor:pointer;stroke:var(--card);stroke-width:2}
+.bullseye-svg path:hover{opacity:.7}
+.bullseye-svg text{pointer-events:none;font-size:9px;fill:var(--text2);font-weight:600;text-anchor:middle}
+.bullseye-svg .apex-circle{cursor:pointer;stroke:var(--card);stroke-width:2}
+.bullseye-legend{flex:1;font-size:12px}
+.bullseye-legend h4{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.legend-item{display:flex;align-items:center;gap:7px;padding:5px;cursor:pointer;border-radius:5px}
+.legend-item:hover,.legend-item.active{background:var(--card);font-weight:600}
+.legend-swatch{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2)}
+.bullseye-clear{margin-top:8px;font-size:11px;color:var(--danger);background:transparent;border:none;cursor:pointer;text-decoration:underline}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
+.modal-overlay.shown{display:flex}
+.modal{background:var(--card);border-radius:14px;max-width:780px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-head h3{font-size:14.5px;font-weight:700}
+.modal-close{background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted);padding:4px 8px}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;align-items:center}
+.frase-cat{margin-bottom:13px}
+.frase-cat h4{font-size:11px;font-weight:700;color:var(--teal2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.frase-item{padding:9px 11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;line-height:1.5;cursor:pointer;margin-bottom:4px;color:var(--text2);position:relative}
+.frase-item:hover{border-color:var(--teal);background:var(--teal-pale)}
+.frase-item .use-badge{position:absolute;right:30px;top:8px;font-size:9.5px;color:var(--muted)}
+.frase-item .del-btn{position:absolute;right:8px;top:8px;background:transparent;border:none;color:var(--danger);font-size:11px;cursor:pointer;opacity:0;font-weight:600}
+.frase-item:hover .del-btn{opacity:1}
+.frase-search{width:100%;border:1.5px solid var(--border2);border-radius:7px;padding:9px 11px;font-size:12.5px;margin-bottom:13px;background:var(--card);color:var(--text)}
+.frase-add-row{display:flex;gap:7px;margin-bottom:13px}
+.frase-add-row select,.frase-add-row input{padding:7px 9px;border:1.5px solid var(--border2);border-radius:6px;font-size:12.5px;background:var(--card);color:var(--text)}
+.frase-add-row textarea{flex:1;padding:7px 9px;border:1.5px solid var(--border2);border-radius:6px;font-size:12.5px;resize:vertical;min-height:38px;background:var(--card);color:var(--text);font-family:'Inter',sans-serif}
+.frase-add-row button{background:var(--teal);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer}
+.dropdown-wrap{position:relative}
+.dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:220px;z-index:60;display:none;overflow:hidden}
+.dropdown-menu.shown{display:block}
+.dropdown-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;padding:10px 14px;font-size:12.5px;color:var(--text);cursor:pointer;font-weight:500;border-bottom:1px solid var(--border)}
+.dropdown-menu button:hover{background:var(--bg)}
+.dropdown-menu button:last-child{border-bottom:none}
+.dd-desc{display:block;font-size:10.5px;color:var(--muted);margin-top:2px;font-weight:400}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.stat-card .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.stat-card .val{font-size:22px;font-weight:700;color:var(--teal2);font-family:'JetBrains Mono',monospace}
+.stat-card .sub{font-size:11px;color:var(--muted);margin-top:3px}
+@media(max-width:1280px){.work{grid-template-columns:180px 1fr 440px}}
+@media(max-width:1100px){.work{grid-template-columns:0 1fr 400px}.nav-pane{display:none}}
+</style>
+</head>
+<body data-theme="light" data-density="comfortable">
+
+<div id="login">
+  <div class="login-box">
+    <div class="logo"><span class="logo-mark">●</span>Laudos da Fer</div>
+    <div class="login-sub">Gerador de laudos de ecocardiograma</div>
+    <input id="pwd" type="password" placeholder="Senha" autocomplete="current-password">
+    <button onclick="doLogin()" id="login-btn">Entrar</button>
+    <div class="login-error" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo"><span class="logo-mark">●</span>Laudos da Fer</div>
+    <div class="tb-tabs">
+      <button class="tb-tab active">ETT</button>
+      <button class="tb-tab" disabled style="opacity:.4;cursor:not-allowed">ETE (em breve)</button>
+    </div>
+    <div class="tb-actions">
+      <button class="tb-btn primary" onclick="aplicarTudoNormal()">✓ Tudo normal</button>
+      <div class="dropdown-wrap">
+        <button class="tb-btn" onclick="toggleDropdown('dd-tpl')">Templates ▾</button>
+        <div class="dropdown-menu" id="dd-tpl">
+          <button onclick="aplicarTemplate('pre-iam')">Pré/Pós-IAM<span class="dd-desc">FEVE + motilidade + diastólica</span></button>
+          <button onclick="aplicarTemplate('ic')">Insuficiência Cardíaca<span class="dd-desc">VE + diastólica + PSAP</span></button>
+          <button onclick="aplicarTemplate('has')">HAS / HVE<span class="dd-desc">Massa + ERP + geometria</span></button>
+          <button onclick="aplicarTemplate('pre-cv')">Pré-cardioversão FA<span class="dd-desc">AE volume + ETE para trombo</span></button>
+          <button onclick="aplicarTemplate('endocardite')">Endocardite<span class="dd-desc">Vegetação + prótese</span></button>
+        </div>
+      </div>
+      <button class="tb-btn" onclick="openFrases()">📚 Frases</button>
+      <button class="tb-btn" onclick="openStats()">📊 Stats</button>
+      <button class="tb-btn icon" onclick="toggleTheme()" title="Tema">🌓</button>
+      <button class="tb-btn icon" onclick="toggleDensity()" title="Densidade">⊟</button>
+      <button class="tb-btn" onclick="resetAll()">Novo</button>
+      <button class="tb-btn danger" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="sticky-pat">
+    <div class="pat-item"><span class="lbl">Paciente:</span><span class="val" id="sp-indic">—</span></div>
+    <div class="sep"></div>
+    <div class="pat-item"><span class="lbl">Sexo:</span><span class="val" id="sp-sexo">—</span></div>
+    <div class="sep"></div>
+    <div class="pat-item"><span class="lbl">Ritmo:</span><span class="val" id="sp-ritmo">Regular</span></div>
+    <div class="sep"></div>
+    <div class="pat-item" id="sp-feve-wrap"><span class="lbl">FEVE:</span><span class="val" id="sp-feve">—</span></div>
+    <div class="sep"></div>
+    <div class="pat-item" id="sp-psap-wrap"><span class="lbl">PSAP:</span><span class="val" id="sp-psap">—</span></div>
+  </div>
+
+  <div class="work">
+    <div class="nav-pane" id="nav-pane"></div>
+    <div class="form-pane" id="form-pane">
+
+      <div class="section" data-id="paciente" id="sec-paciente">
+        <div class="sec-head"><div class="sec-num">P</div><div class="sec-title">Identificação do Paciente</div></div>
+        <div class="sec-body">
+          <div class="field-row cols-3">
+            <div class="fld" style="grid-column:span 2"><label>Indicação clínica</label><input id="pac-indic" placeholder="Ex: AVCi, IC, sopro, endocardite..."></div>
+            <div class="fld"><label>Sexo</label><select id="pac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
+          </div>
+          <div class="field-row cols-4">
+            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
+            <div class="fld fld-suffix"><label>FC (opcional)</label><input id="pac-fc" type="number" placeholder="bpm"><span class="suffix">bpm</span></div>
+            <div class="fld fld-suffix"><label>Peso</label><input id="pac-peso" type="number" step="0.1" placeholder="kg"><span class="suffix">kg</span></div>
+            <div class="fld fld-suffix"><label>Altura</label><input id="pac-alt" type="number" placeholder="cm"><span class="suffix">cm</span></div>
+          </div>
+          <div class="field-row cols-3">
+            <div class="fld fld-suffix fld-calc"><label>BSA</label><input id="pac-bsa" readonly><span class="suffix">m²</span></div>
+            <div class="fld"><label>Janela acústica</label><select id="pac-janela"><option value="">Normal</option><option value="Janela acústica limitada.">Limitada</option><option value="Janela acústica muito limitada.">Muito limitada</option></select></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Janela aparece em DADOS DESCRITIVOS</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="estrut" id="sec-estrut">
+        <div class="sec-head"><div class="sec-num">1</div><div class="sec-title">Dados Estruturais</div></div>
+        <div class="sec-body">
+          <div class="field-row cols-4">
+            <div class="fld fld-suffix"><label>Raiz da Aorta</label><input id="m-aoraiz" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>Aorta Ascendente</label><input id="m-aoasc" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>Átrio Esq. (AE)</label><input id="m-ae" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>Vol. AE indexado</label><input id="ae-vol" type="number" placeholder="ml/m²"><span class="suffix">ml/m²</span></div>
+          </div>
+          <div class="field-row cols-4">
+            <div class="fld fld-suffix"><label>VE diástole</label><input id="m-ved" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>VE sístole</label><input id="m-ves" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>Septo (SIV)</label><input id="m-siv" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld fld-suffix"><label>Parede Post.</label><input id="m-pp" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+          </div>
+          <div class="field-row cols-2">
+            <div class="fld fld-suffix fld-calc"><label>Massa indexada</label><input id="m-massa" readonly><span class="suffix">g/m²</span></div>
+            <div class="fld fld-calc"><label>ERP</label><input id="m-erp" readonly></div>
+          </div>
+          <div class="calc-bar" id="calc-info" style="display:none">
+            <div class="calc-item"><span class="lbl">Padrão geométrico</span><span class="val" id="calc-padrao">—</span></div>
+            <div class="calc-item"><span class="lbl">Ref. Massa ♀</span><span class="val">≤95</span><span class="ref">g/m²</span></div>
+            <div class="calc-item"><span class="lbl">Ref. Massa ♂</span><span class="val">≤115</span><span class="ref">g/m²</span></div>
+            <div class="calc-item"><span class="lbl">Ref. ERP</span><span class="val">≤0,42</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="aorta" id="sec-aorta">
+        <div class="sec-head"><div class="sec-num">2</div><div class="sec-title">Aorta Torácica</div><div class="sec-status normal" id="st-aorta">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="auto" onclick="setMode('aorta','auto')">Auto (medidas)</button>
+            <button data-val="alterado" onclick="setMode('aorta','alterado')">Personalizar</button>
+          </div>
+          <div class="hint">Auto: ≤37 N · 38–44 disc · 45–51 mod · ≥52 imp (raiz). ≤35 N · 36–42 disc · 43–49 mod · ≥50 imp (ascendente).</div>
+          <div class="alt-body" id="alt-aorta" style="display:none;margin-top:9px">
+            <span class="opt-label">Achados adicionais</span>
+            <div class="opts-grid dense" id="opts-aorta">
+              <label class="opt-chip"><input type="checkbox" value="Arco aórtico não visualizado adequadamente"><span>Arco mal visualizado</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Ascendente não visualizada adequadamente"><span>Ascendente mal vis.</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Calcificação parietal"><span>Calcificação</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Ateromatose aórtica"><span>Ateromatose</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Tubo protético em aorta ascendente"><span>Tubo protético</span></label>
+            </div>
+            <div class="fld"><label>Observação livre</label><textarea id="obs-aorta" placeholder="Detalhes adicionais..."></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="ae" id="sec-ae">
+        <div class="sec-head"><div class="sec-num">3</div><div class="sec-title">Átrio Esquerdo</div><div class="sec-status normal" id="st-ae">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="auto" onclick="setMode('ae','auto')">Auto (volume)</button>
+            <button data-val="alterado" onclick="setMode('ae','alterado')">Personalizar</button>
+          </div>
+          <div id="ae-grau-block" style="display:none">
+            <span class="opt-label">Grau de aumento</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="ae-grau" value="Aumento discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="ae-grau" value="Aumento moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="ae-grau" value="Aumento importante"><span>Importante</span></label>
+            </div>
+          </div>
+          <div class="hint">Auto pelo volume indexado: 16–34 N · 35–41 D · 42–48 Mod · &gt;48 Imp</div>
+        </div>
+      </div>
+
+      <div class="section" data-id="ve" id="sec-ve">
+        <div class="sec-head"><div class="sec-num">4</div><div class="sec-title">Ventrículo Esquerdo</div><div class="sec-status normal" id="st-ve">Normal</div></div>
+        <div class="sec-body">
+          <span class="opt-label">Espessura miocárdica</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-esp" value="preservada" checked><span>Preservada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="remodelamento"><span>Remodelamento concêntrico</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-disc"><span>HVE concêntrica discreta</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-mod"><span>HVE concêntrica moderada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-imp"><span>HVE concêntrica importante</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-excentrica"><span>HVE excêntrica</span></label>
+          </div>
+          <div class="hint">Auto a partir de massa indexada + ERP (item 1)</div>
+          <div class="divider"></div>
+          <span class="opt-label">Cavidade ventricular</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-cav" value="normal" checked><span>Diâmetro normal</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-cav" value="aumento-disc"><span>Aumento discreto</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-cav" value="aumento-mod"><span>Aumento moderado</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-cav" value="aumento-imp"><span>Aumento importante</span></label>
+          </div>
+          <div class="hint">Auto pelo VEd: 35–56 N · 57–63 D · 64–67 M · ≥68 I</div>
+          <div class="divider"></div>
+          <div class="field-row cols-3">
+            <div class="fld fld-suffix"><label>FEVE</label><input id="ve-feve" type="number" placeholder="%"><span class="suffix">%</span></div>
+            <div class="fld"><label>Método</label><select id="ve-feve-met"><option>Simpson</option><option>Teicholz</option><option value="Teicholz-janela">Teicholz - janela limitada</option></select></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Cortes por sexo</div></div>
+          </div>
+          <span class="opt-label">Função sistólica</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-sist" value="preservada" checked><span>Preservada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-sist" value="disc-reduzida"><span>Discreta</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-sist" value="mod-reduzida"><span>Moderada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-sist" value="imp-reduzida"><span>Importante</span></label>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Motilidade segmentar</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-mot" value="preservada" checked onchange="onMotilidadeChange()"><span>Preservada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-mot" value="alterada" onchange="onMotilidadeChange()"><span>Alterada → mapear</span></label>
+          </div>
+          <div id="bullseye-container" style="display:none">
+            <div class="bullseye-wrap">
+              <svg class="bullseye-svg" id="bullseye-svg" viewBox="0 0 300 300" width="260" height="260"></svg>
+              <div class="bullseye-legend">
+                <h4>Estado a aplicar</h4>
+                <div class="legend-item active" data-state="hipocinesia" onclick="selectBullseyeState('hipocinesia')"><div class="legend-swatch" style="background:#fde68a"></div>Hipocinesia</div>
+                <div class="legend-item" data-state="acinesia" onclick="selectBullseyeState('acinesia')"><div class="legend-swatch" style="background:#fb923c"></div>Acinesia</div>
+                <div class="legend-item" data-state="discinesia" onclick="selectBullseyeState('discinesia')"><div class="legend-swatch" style="background:#ef4444"></div>Discinesia</div>
+                <div class="legend-item" data-state="aneurisma" onclick="selectBullseyeState('aneurisma')"><div class="legend-swatch" style="background:#a855f7"></div>Aneurisma</div>
+                <div class="legend-item" data-state="normal" onclick="selectBullseyeState('normal')"><div class="legend-swatch"></div>Normal (limpar)</div>
+                <button class="bullseye-clear" onclick="clearBullseye()">Limpar tudo</button>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <span class="opt-label">Função diastólica (ASE 2025)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-diast" value="normal" checked><span>Normal</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="grau-1"><span>Grau I</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="grau-2"><span>Grau II</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="grau-3"><span>Grau III</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="indet"><span>Indeterminada</span></label>
+          </div>
+          <div class="field-row cols-2">
+            <div class="fld fld-suffix"><label>E/e' (médio)</label><input id="ve-ee" type="number" step="0.1" placeholder="—"><span class="suffix"></span></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Aparece no laudo se preenchido</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="ad" id="sec-ad">
+        <div class="sec-head"><div class="sec-num">5</div><div class="sec-title">Átrio Direito</div><div class="sec-status normal" id="st-ad">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="normal" onclick="setMode('ad','normal')">Normal</button>
+            <button data-val="alterado" onclick="setMode('ad','alterado')">Aumentado</button>
+          </div>
+          <div class="alt-body" id="alt-ad" style="display:none">
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="ad-grau" value="Aumento discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="ad-grau" value="Aumento moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="ad-grau" value="Aumento importante"><span>Importante</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>Vol. AD indexado (opcional)</label><input id="ad-vol" type="number" placeholder="ml/m²"><span class="suffix">ml/m²</span></div>
+              <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Ref: ♂&gt;32 · ♀&gt;27</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="vd" id="sec-vd">
+        <div class="sec-head"><div class="sec-num">6</div><div class="sec-title">Ventrículo Direito</div><div class="sec-status normal" id="st-vd">Normal</div></div>
+        <div class="sec-body">
+          <span class="opt-label">Dimensões</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="vd-dim" value="normal" checked><span>Normais</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-dim" value="aumento-disc"><span>Discreto</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-dim" value="aumento-mod"><span>Moderado</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-dim" value="aumento-imp"><span>Importante</span></label>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Função sistólica</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="vd-func" value="normal" checked><span>Preservada</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-func" value="disf-disc"><span>Discreta</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-func" value="disf-mod"><span>Moderada</span></label>
+            <label class="opt-chip"><input type="radio" name="vd-func" value="disf-imp"><span>Importante</span></label>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Observações</span>
+          <div class="opts-grid">
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Fios de marcapasso em cavidades direitas."><span>Fios de marcapasso</span></label>
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Eletrodos de marcapasso em cavidades direitas."><span>Eletrodos de MP</span></label>
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Cateter venoso central em cavidades direitas."><span>CVC</span></label>
+          </div>
+          <div class="field-row cols-2" style="margin-top:9px">
+            <div class="fld fld-suffix"><label>TAPSE (opcional)</label><input id="vd-tapse" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">TAPSE ≥ 17 = normal</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="vm" id="sec-vm">
+        <div class="sec-head"><div class="sec-num">7</div><div class="sec-title">Valva Mitral</div><div class="sec-status normal" id="st-vm">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="normal" onclick="setMode('vm','normal')">Normal</button>
+            <button data-val="alterado" onclick="setMode('vm','alterado')">Alterada</button>
+            <button data-val="protese" onclick="setMode('vm','protese')">Prótese</button>
+          </div>
+          <div class="alt-body" id="alt-vm" style="display:none">
+            <span class="opt-label">Morfologia</span>
+            <div class="opts-grid dense">
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="discretamente espessadas"><span>Disc. espessadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="espessadas"><span>Espessadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com cúspide anterior alongada"><span>Cúspide ant. alongada</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com calcificação do anel mitral posterior"><span>Calc. anel mitral</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso valvar"><span>Prolapso</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com vegetação"><span>Vegetação</span></label>
+              <label class="opt-chip" id="vm-img-chip"><input type="checkbox" id="vm-img-chk"><span>Imagem ecogênica móvel</span></label>
+            </div>
+            <div id="vm-img-row" style="display:none">
+              <div class="field-row cols-2">
+                <div class="fld fld-suffix"><label>Tamanho</label><input id="vm-img-size" type="number" step="0.1" placeholder="mm"><span class="suffix">mm</span></div>
+                <div class="fld"><label>Face</label><select id="vm-img-face"><option value="atrial">atrial</option><option value="ventricular">ventricular</option><option value="atrial e ventricular">atrial e ventricular</option></select></div>
+              </div>
+            </div>
+            <span class="opt-label">Refluxo</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vm-refl" value=""><span>Sem</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo importante"><span>Importante</span></label>
+            </div>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="checkbox" name="vm-refl-tipo" value="excêntrico"><span>Jato excêntrico</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-refl-tipo" value="central"><span>Jato central</span></label>
+            </div>
+            <span class="opt-label">Estenose</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vm-est" value=""><span>Sem</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose discreta"><span>Discreta</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose moderada"><span>Moderada</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose importante"><span>Importante</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+              <div class="fld fld-suffix"><label>Área valvar</label><input id="vm-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+            <div id="sugest-vm"></div>
+          </div>
+          <div id="prot-vm" style="display:none">
+            <span class="opt-label">Tipo</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vm-prot-tipo" value="Prótese mecânica em posição mitral"><span>Mecânica</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-prot-tipo" value="Prótese biológica em posição mitral"><span>Biológica</span></label>
+            </div>
+            <span class="opt-label">Funcionamento</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="vm-prot-func" value="normofuncionante" checked><span>Normofuncionante</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-prot-func" value="disfuncionante"><span>Sinais de disfunção</span></label>
+            </div>
+            <span class="opt-label">Refluxo perivalvar</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="vm-prot-perival" value="" checked><span>Ausente</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-prot-perival" value="Refluxo perivalvar discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-prot-perival" value="Refluxo perivalvar moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-prot-perival" value="Refluxo perivalvar importante"><span>Importante</span></label>
+            </div>
+            <span class="opt-label">Adicionais</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Vegetação sobre a prótese"><span>Vegetação</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Imagem sugestiva de trombo"><span>Trombo</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Pannus"><span>Pannus</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-prot-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+              <div class="fld fld-suffix"><label>Área efetiva</label><input id="vm-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="va" id="sec-va">
+        <div class="sec-head"><div class="sec-num">8</div><div class="sec-title">Valva Aórtica</div><div class="sec-status normal" id="st-va">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="normal" onclick="setMode('va','normal')">Normal</button>
+            <button data-val="alterado" onclick="setMode('va','alterado')">Alterada</button>
+            <button data-val="protese" onclick="setMode('va','protese')">Prótese / TAVI</button>
+          </div>
+          <span class="opt-label">Anatomia</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="va-anat" value="trivalvular" checked><span>Trivalvular</span></label>
+            <label class="opt-chip"><input type="radio" name="va-anat" value="bicuspide"><span>Bicúspide</span></label>
+          </div>
+          <div class="alt-body" id="alt-va" style="display:none;margin-top:9px">
+            <span class="opt-label">Morfologia</span>
+            <div class="opts-grid dense">
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="discretamente espessadas"><span>Disc. espessadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="espessadas"><span>Espessadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="calcificadas"><span>Calcificadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="com vegetação"><span>Vegetação</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="janela limitada"><span>Janela limitada</span></label>
+            </div>
+            <span class="opt-label">Refluxo</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="va-refl" value=""><span>Sem</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo importante"><span>Importante</span></label>
+            </div>
+            <span class="opt-label">Estenose</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="va-est" value=""><span>Sem</span></label>
+              <label class="opt-chip"><input type="radio" name="va-est" value="Esclerose valvar"><span>Esclerose</span></label>
+              <label class="opt-chip"><input type="radio" name="va-est" value="Estenose discreta"><span>Discreta</span></label>
+              <label class="opt-chip"><input type="radio" name="va-est" value="Estenose moderada"><span>Moderada</span></label>
+              <label class="opt-chip"><input type="radio" name="va-est" value="Estenose importante"><span>Importante</span></label>
+            </div>
+            <div class="field-row cols-3">
+              <div class="fld fld-suffix"><label>Vmax</label><input id="va-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
+              <div class="fld fld-suffix"><label>Grad. médio</label><input id="va-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+              <div class="fld fld-suffix"><label>Área valvar</label><input id="va-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+            <div id="sugest-va"></div>
+          </div>
+          <div id="prot-va" style="display:none">
+            <span class="opt-label">Tipo</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="va-prot-tipo" value="Prótese mecânica em posição aórtica"><span>Mecânica</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-tipo" value="Prótese biológica em posição aórtica"><span>Biológica</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-tipo" value="Bioprótese transcateter (TAVI)"><span>TAVI</span></label>
+            </div>
+            <span class="opt-label">Funcionamento</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="va-prot-func" value="normofuncionante" checked><span>Normo</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-func" value="disfuncionante"><span>Disfunção</span></label>
+            </div>
+            <span class="opt-label">Refluxo perivalvar</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="va-prot-perival" value="" checked><span>Ausente</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-perival" value="Refluxo perivalvar discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-perival" value="Refluxo perivalvar moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="va-prot-perival" value="Refluxo perivalvar importante"><span>Importante</span></label>
+            </div>
+            <div class="field-row cols-3">
+              <div class="fld fld-suffix"><label>Vmax</label><input id="va-prot-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
+              <div class="fld fld-suffix"><label>Grad. médio</label><input id="va-prot-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+              <div class="fld fld-suffix"><label>Área efetiva</label><input id="va-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="vt" id="sec-vt">
+        <div class="sec-head"><div class="sec-num">9</div><div class="sec-title">Valva Tricúspide</div><div class="sec-status normal" id="st-vt">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="normal" onclick="setMode('vt','normal')">Normal</button>
+            <button data-val="alterado" onclick="setMode('vt','alterado')">Alterada</button>
+          </div>
+          <div class="alt-body" id="alt-vt" style="display:none">
+            <span class="opt-label">Refluxo</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo importante"><span>Importante</span></label>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:7px">Dados de PSAP são reportados na Valva Pulmonar (próxima seção).</div>
+        </div>
+      </div>
+
+      <div class="section" data-id="vp" id="sec-vp">
+        <div class="sec-head"><div class="sec-num">10</div><div class="sec-title">Valva Pulmonar (PSAP)</div><div class="sec-status normal" id="st-vp">Normal</div></div>
+        <div class="sec-body">
+          <span class="opt-label">Achados da valva</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="vp-base" value="normal" checked><span>Sem anormalidades</span></label>
+            <label class="opt-chip"><input type="radio" name="vp-base" value="alterada"><span>Alterada</span></label>
+          </div>
+          <div id="vp-alt-body" style="display:none">
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="checkbox" name="vp-alt" value="Refluxo pulmonar discreto"><span>Refluxo discreto</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vp-alt" value="Refluxo pulmonar moderado"><span>Refluxo moderado</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vp-alt" value="Estenose pulmonar"><span>Estenose</span></label>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <span class="opt-label">PSAP (via refluxo tricúspide)</span>
+          <div class="field-row cols-3">
+            <div class="fld fld-suffix"><label>Vel. máx. refluxo TR</label><input id="vt-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
+            <div class="fld"><label>PAD presumida</label><select id="vt-pad"><option value="5">5 mmHg</option><option value="10">10 mmHg</option><option value="15">15 mmHg</option></select></div>
+            <div class="fld fld-suffix fld-calc"><label>PSAP estimada</label><input id="vt-psap" readonly><span class="suffix">mmHg</span></div>
+          </div>
+          <div class="hint">Texto sai na linha da Valva Pulmonar. Auto: &lt;35 N · 35–49 D · 50–69 M · ≥70 I</div>
+        </div>
+      </div>
+
+      <div class="section" data-id="peri" id="sec-peri">
+        <div class="sec-head"><div class="sec-num">11</div><div class="sec-title">Pericárdio</div><div class="sec-status normal" id="st-peri">Normal</div></div>
+        <div class="sec-body">
+          <span class="opt-label">Achado</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="peri" value="normal" checked onchange="onPeriChange()"><span>Sem derrame</span></label>
+            <label class="opt-chip"><input type="radio" name="peri" value="laminar" onchange="onPeriChange()"><span>Laminar</span></label>
+            <label class="opt-chip"><input type="radio" name="peri" value="disc" onchange="onPeriChange()"><span>Discreto</span></label>
+            <label class="opt-chip"><input type="radio" name="peri" value="mod" onchange="onPeriChange()"><span>Moderado</span></label>
+            <label class="opt-chip"><input type="radio" name="peri" value="imp" onchange="onPeriChange()"><span>Importante</span></label>
+            <label class="opt-chip"><input type="radio" name="peri" value="espess" onchange="onPeriChange()"><span>Espessado</span></label>
+          </div>
+          <div id="peri-extra" style="display:none">
+            <span class="opt-label">Localização</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="peri-loc" value="circunferencial" checked><span>Circunferencial</span></label>
+              <label class="opt-chip"><input type="radio" name="peri-loc" value="adjacente ao ventrículo direito"><span>Adj. VD</span></label>
+              <label class="opt-chip"><input type="radio" name="peri-loc" value="adjacente ao ventrículo esquerdo"><span>Adj. VE</span></label>
+              <label class="opt-chip"><input type="radio" name="peri-loc" value="loculado"><span>Loculado</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>Mensuração (opcional)</label><input id="peri-mm" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+              <div class="fld"><label>Qualidade</label><select id="peri-qual"><option value="">—</option><option value="homogêneo">Homogêneo</option><option value="heterogêneo">Heterogêneo</option></select></div>
+            </div>
+            <span class="opt-label">Repercussão hemodinâmica</span>
+            <div class="opts-grid">
+              <label class="opt-chip sel"><input type="radio" name="peri-rep" value="sem" checked><span>Sem sinais</span></label>
+              <label class="opt-chip"><input type="radio" name="peri-rep" value="com"><span>Com sinais</span></label>
+              <label class="opt-chip"><input type="radio" name="peri-rep" value="restricao"><span>Sem restrição miocárdica</span></label>
+            </div>
+            <div id="sugest-peri"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="septo" id="sec-septo">
+        <div class="sec-head"><div class="sec-num">12</div><div class="sec-title">Septos</div><div class="sec-status normal" id="st-septo">Normal</div></div>
+        <div class="sec-body">
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="septo" value="normal" checked><span>Sem shunt</span></label>
+            <label class="opt-chip"><input type="radio" name="septo" value="fop"><span>FOP / CIA OS</span></label>
+            <label class="opt-chip"><input type="radio" name="septo" value="cia"><span>CIA com shunt</span></label>
+            <label class="opt-chip"><input type="radio" name="septo" value="civ"><span>CIV</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" data-id="vci" id="sec-vci">
+        <div class="sec-head"><div class="sec-num">13</div><div class="sec-title">Veia Cava Inferior</div><div class="sec-status normal" id="st-vci">Normal</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="incluir" onclick="setMode('vci','incluir')">Incluir</button>
+            <button data-val="omitir" onclick="setMode('vci','omitir')">Omitir</button>
+          </div>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="vci" value="normal" checked><span>Calibre normal</span></label>
+            <label class="opt-chip"><input type="radio" name="vci" value="dilatada-colapso"><span>Aumentada, colapso reduzido</span></label>
+            <label class="opt-chip"><input type="radio" name="vci" value="dilatada-sem-colapso"><span>Aumentada, sem colapso</span></label>
+            <label class="opt-chip"><input type="radio" name="vci" value="pletorica"><span>Pletórica</span></label>
+          </div>
+          <div class="field-row cols-2">
+            <div class="fld fld-suffix"><label>VCI (opcional)</label><input id="vci-mm" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Aparece como linha solta após Septos</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="alerts-zone"></div>
+
+      <div class="section" data-id="concl" id="sec-concl">
+        <div class="sec-head"><div class="sec-num">★</div><div class="sec-title">Conclusão e Recomendações</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="auto" onclick="setConclMode('auto')">Automática</button>
+            <button data-val="manual" onclick="setConclMode('manual')">Manual</button>
+          </div>
+          <div id="concl-auto-info" class="hint" style="margin-bottom:9px">Conclusão gerada dos achados. Sugestões aparecem abaixo conforme o caso.</div>
+          <div class="fld" id="concl-manual-box" style="display:none"><label>Conclusão personalizada</label><textarea id="concl-manual" rows="4"></textarea></div>
+          <div id="sugest-concl"></div>
+          <div class="fld" style="margin-top:9px"><label>Recomendações (opcional)</label><textarea id="recom" rows="2" placeholder="Ex: sugere-se cintilografia..."></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-pane">
+      <div class="preview-head"><h2>Laudo gerado</h2><div class="meta" id="preview-meta">— em tempo real —</div></div>
+      <div class="preview-body" id="preview-body"></div>
+    </div>
+  </div>
+
+  <div class="fab-wrap">
+    <button class="fab secondary" onclick="resetAll()" title="Limpar">🗑</button>
+    <button class="fab" id="btn-copy" onclick="copyReport()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copiar laudo
+    </button>
+  </div>
+
+  <div class="modal-overlay" id="modal-frases">
+    <div class="modal">
+      <div class="modal-head"><h3>📚 Biblioteca de frases</h3><button class="modal-close" onclick="closeFrases()">×</button></div>
+      <div class="modal-body">
+        <input class="frase-search" id="frase-search" placeholder="Buscar..." oninput="renderFrases()">
+        <div class="frase-add-row">
+          <select id="frase-cat-new"><option value="endocardite">Endocardite</option><option value="protese">Prótese</option><option value="iam">IAM</option><option value="ic">IC</option><option value="hp">HP</option><option value="tamponamento">Tamponamento</option><option value="dissecao">Dissecção</option><option value="outras">Outras</option></select>
+          <textarea id="frase-text-new" placeholder="Nova frase..."></textarea>
+          <button onclick="addFrase()">+ Salvar</button>
+        </div>
+        <div id="frases-list"></div>
+      </div>
+      <div class="modal-foot"><div class="hint" style="margin-right:auto">Sincronizadas no banco D1.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeFrases()">Fechar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-stats">
+    <div class="modal">
+      <div class="modal-head"><h3>📊 Estatísticas de uso</h3><button class="modal-close" onclick="closeStats()">×</button></div>
+      <div class="modal-body" id="stats-body"><div class="hint">Carregando...</div></div>
+      <div class="modal-foot"><div class="hint" style="margin-right:auto">Sem dados de paciente.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeStats()">Fechar</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

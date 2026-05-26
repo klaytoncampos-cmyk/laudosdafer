@@ -1,0 +1,14 @@
+{
+  "name": "laudosdafer",
+  "version": "3.0.0",
+  "description": "Gerador de laudos de ecocardiograma — Cloudflare Pages + D1",
+  "scripts": {
+    "setup-auth": "node scripts/setup-auth.js",
+    "db:apply": "wrangler d1 execute laudosdafer-db --remote --file=schema.sql",
+    "db:apply-local": "wrangler d1 execute laudosdafer-db --local --file=schema.sql",
+    "dev": "wrangler pages dev . --d1=DB=laudosdafer-db"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
