@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/28327692/README.md)
 # Laudos da Fer — Setup completo
 
 Gerador de laudos de ecocardiograma para Dra. Fernanda Andre Carbonieri (Santa Casa de Londrina).
@@ -182,6 +183,50 @@ Abre em `http://localhost:8788`.
 ---
 
 ## O que tem nessa versão
+
+**Novidades V4 (revisão de 54+ laudos reais dela):**
+
+*Estrutura:*
+- Bullseye SVG → **chips em 2 colunas** (basal/médio/apical) com seletor de estado global
+- TAVI consolidado como subtipo dentro de **Prótese** (Mecânica/Biológica/TAVI)
+- Toggle **ETT / ETT+ETE** no topo da tela
+- Seção **ETE completa** (drenagem das veias, apêndice atrial, trombos, vegetação) com 2 variantes de título ("transesofágica" / "esofágica")
+
+*Valvopatias detalhadas:*
+- Campo **Grad. máximo** + Grad. médio nas 4 valvas com medidas (VM nativa, VA nativa, prót. VM, prót. VA)
+- Prefixo de gradiente (sistólico / diastólico / AE-VE / sem prefixo)
+- Método da área valvar (PHT / Equação de Continuidade)
+- **Graus intermediários** (discreto a moderado, moderado a importante) em refluxos e HVE
+- Detecção automática de **"Dupla lesão valvar"** (estenose + refluxo na mesma valva) com concordância gramatical correta
+- Causa do refluxo na tricúspide (funcional / sec. dilatação do anel)
+- **Hipocinesia/Acinesia/Discinesia/Aneurisma difuso do VE** detectado automaticamente quando todos os 17 segmentos têm o mesmo estado
+
+*Endocardite e vegetações:*
+- Disjunção do anel valvar
+- Prolapso de ambas as cúspides → frase específica "Presença de prolapso de ambas as cúspides..."
+- **Vegetação algodonosa filamentar** com tamanho
+- **Medidas por cúspide** (anterior/posterior) para espessamento de margens livres
+- Calcificação do anel mitral com grau (discreta/moderada/importante/sem grau)
+
+*Frases especiais novas:*
+- **Pesquisa de shunt com contraste salino (microbolhas)** — positiva / negativa
+- Shunt em lâmina pós-ablação (variante de FOP)
+- "Há sinais de aumento das pressões de enchimento" (checkbox)
+- "Fluxo e pulsatilidade normais" na aorta (HA secundária)
+- "Exame beira-leito" como linha em DADOS DESCRITIVOS
+- HVE descritiva ("Aumento moderado e simétrico da espessura miocárdica")
+
+*Diastólica:*
+- Padrão diastólico **não avaliado** devido ao marcapasso
+- Padrão diastólico **não avaliado** devido à valvopatia mitral
+
+*Ritmo:*
+- Sinusal com arritmias paroxísticas durante o exame
+- Regular com extrassístoles frequentes
+- Regular, taquicárdico
+- (totalizando 9 opções)
+
+---
 
 **Correções da revisão dos 22 laudos reais dela:**
 - Aorta usa "Dilatação"/"Ectasia" (não "Aumento")
