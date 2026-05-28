@@ -157,17 +157,33 @@ body[data-density="compact"] .section{margin-bottom:8px}
 .fab.secondary:hover{border-color:var(--danger);color:var(--danger)}
 .hint{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px}
 .divider{height:1px;background:var(--border);margin:11px 0}
-.bullseye-wrap{display:flex;gap:16px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px;margin-top:7px}
-.bullseye-svg path{cursor:pointer;stroke:var(--card);stroke-width:2}
-.bullseye-svg path:hover{opacity:.7}
-.bullseye-svg text{pointer-events:none;font-size:9px;fill:var(--text2);font-weight:600;text-anchor:middle}
-.bullseye-svg .apex-circle{cursor:pointer;stroke:var(--card);stroke-width:2}
-.bullseye-legend{flex:1;font-size:12px}
-.bullseye-legend h4{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
-.legend-item{display:flex;align-items:center;gap:7px;padding:5px;cursor:pointer;border-radius:5px}
-.legend-item:hover,.legend-item.active{background:var(--card);font-weight:600}
-.legend-swatch{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2)}
-.bullseye-clear{margin-top:8px;font-size:11px;color:var(--danger);background:transparent;border:none;cursor:pointer;text-decoration:underline}
+.seg-state-bar{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-top:7px;margin-bottom:8px}
+.seg-state-bar .opt-label{margin-bottom:6px}
+.seg-state.sel{background:#fde68a !important;border-color:#fde68a !important;color:#78350f !important}
+.seg-state[data-state="acinesia"].sel{background:#fb923c !important;border-color:#fb923c !important;color:#7c2d12 !important}
+.seg-state[data-state="discinesia"].sel{background:#ef4444 !important;border-color:#ef4444 !important;color:#fff !important}
+.seg-state[data-state="aneurisma"].sel{background:#a855f7 !important;border-color:#a855f7 !important;color:#fff !important}
+.seg-region{border-left:2.5px solid var(--accent);background:var(--accent-pale);padding:7px 10px;margin-bottom:8px;border-radius:0 6px 6px 0}
+.seg-region-head{font-size:9.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.seg-chip{display:flex;align-items:center;gap:6px;padding:6px 9px;border:1.5px solid var(--border2);background:var(--card);border-radius:6px;font-size:11.5px;color:var(--text2);cursor:pointer;user-select:none;font-weight:500;transition:all .15s}
+.seg-chip:hover{border-color:var(--teal)}
+.seg-chip.seg-apex{grid-column:span 2}
+.seg-tick{display:inline-block;width:13px;height:13px;border-radius:3px;border:1.5px solid var(--border2);background:var(--card);flex-shrink:0;position:relative}
+.seg-chip[data-marked="hipocinesia"]{background:#fde68a;border-color:#fde68a;color:#78350f}
+.seg-chip[data-marked="acinesia"]{background:#fb923c;border-color:#fb923c;color:#7c2d12}
+.seg-chip[data-marked="discinesia"]{background:#ef4444;border-color:#ef4444;color:#fff}
+.seg-chip[data-marked="aneurisma"]{background:#a855f7;border-color:#a855f7;color:#fff}
+.seg-chip[data-marked] .seg-tick{background:#fff;border-color:#fff}
+.seg-chip[data-marked] .seg-tick::after{content:'';position:absolute;left:3px;top:0;width:5px;height:9px;border:solid #333;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.seg-actions{display:flex;gap:6px;margin-top:8px}
+.seg-btn-diffuse,.seg-btn-clear{flex:1;padding:6px 9px;font-size:11.5px;border:1.5px solid var(--border2);background:var(--card);border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;color:var(--text2)}
+.seg-btn-clear{color:var(--danger);border-color:var(--border2)}
+.seg-btn-clear:hover{border-color:var(--danger)}
+.seg-btn-diffuse:hover{border-color:var(--teal);color:var(--teal2)}
+.seg-preview{margin-top:9px;padding:8px 11px;background:var(--teal-pale);border-left:2.5px solid var(--teal);border-radius:0 6px 6px 0;font-size:11.5px;color:var(--teal2);line-height:1.5;display:none}
+.seg-preview.shown{display:block}
+.seg-preview b{font-weight:700}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}
 .modal-overlay.shown{display:flex}
 .modal{background:var(--card);border-radius:14px;max-width:780px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -220,8 +236,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
   <div class="topbar">
     <div class="logo"><span class="logo-mark">●</span>Laudos da Fer</div>
     <div class="tb-tabs">
-      <button class="tb-tab active">ETT</button>
-      <button class="tb-tab" disabled style="opacity:.4;cursor:not-allowed">ETE (em breve)</button>
+      <button class="tb-tab active" data-tipo="ETT" onclick="setTipo('ETT')">ETT</button>
+      <button class="tb-tab" data-tipo="ETE" onclick="setTipo('ETE')">ETT + ETE</button>
     </div>
     <div class="tb-actions">
       <button class="tb-btn primary" onclick="aplicarTudoNormal()">✓ Tudo normal</button>
@@ -268,7 +284,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="fld"><label>Sexo</label><select id="pac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
           </div>
           <div class="field-row cols-4">
-            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
+            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Sinusal com arritmias paroxísticas durante o exame</option><option>Regular com extrassístoles frequentes</option><option>Regular, taquicárdico</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
             <div class="fld fld-suffix"><label>FC (opcional)</label><input id="pac-fc" type="number" placeholder="bpm"><span class="suffix">bpm</span></div>
             <div class="fld fld-suffix"><label>Peso</label><input id="pac-peso" type="number" step="0.1" placeholder="kg"><span class="suffix">kg</span></div>
             <div class="fld fld-suffix"><label>Altura</label><input id="pac-alt" type="number" placeholder="cm"><span class="suffix">cm</span></div>
@@ -276,7 +292,9 @@ body[data-density="compact"] .section{margin-bottom:8px}
           <div class="field-row cols-3">
             <div class="fld fld-suffix fld-calc"><label>BSA</label><input id="pac-bsa" readonly><span class="suffix">m²</span></div>
             <div class="fld"><label>Janela acústica</label><select id="pac-janela"><option value="">Normal</option><option value="Janela acústica limitada.">Limitada</option><option value="Janela acústica muito limitada.">Muito limitada</option></select></div>
-            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Janela aparece em DADOS DESCRITIVOS</div></div>
+            <div class="fld" style="display:flex;align-items:flex-end">
+              <label class="opt-chip" style="margin:0;flex:1;justify-content:flex-start"><input type="checkbox" id="pac-beira"><span>Exame beira-leito</span></label>
+            </div>
           </div>
         </div>
       </div>
@@ -325,6 +343,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" value="Calcificação parietal"><span>Calcificação</span></label>
               <label class="opt-chip"><input type="checkbox" value="Ateromatose aórtica"><span>Ateromatose</span></label>
               <label class="opt-chip"><input type="checkbox" value="Tubo protético em aorta ascendente"><span>Tubo protético</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Fluxo e pulsatilidade normais"><span>Fluxo e pulsat. normais</span></label>
             </div>
             <div class="fld"><label>Observação livre</label><textarea id="obs-aorta" placeholder="Detalhes adicionais..."></textarea></div>
           </div>
@@ -358,9 +377,12 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip sel"><input type="radio" name="ve-esp" value="preservada" checked><span>Preservada</span></label>
             <label class="opt-chip"><input type="radio" name="ve-esp" value="remodelamento"><span>Remodelamento concêntrico</span></label>
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-disc"><span>HVE concêntrica discreta</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-disc-mod"><span>HVE concêntrica disc. a mod.</span></label>
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-mod"><span>HVE concêntrica moderada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-mod-imp"><span>HVE concêntrica mod. a imp.</span></label>
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-concentrica-imp"><span>HVE concêntrica importante</span></label>
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-excentrica"><span>HVE excêntrica</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-descritiva"><span>Aumento simétrico (descritivo)</span></label>
           </div>
           <div class="hint">Auto a partir de massa indexada + ERP (item 1)</div>
           <div class="divider"></div>
@@ -388,21 +410,61 @@ body[data-density="compact"] .section{margin-bottom:8px}
           <span class="opt-label" style="margin-top:10px">Motilidade segmentar</span>
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="ve-mot" value="preservada" checked onchange="onMotilidadeChange()"><span>Preservada</span></label>
-            <label class="opt-chip"><input type="radio" name="ve-mot" value="alterada" onchange="onMotilidadeChange()"><span>Alterada → mapear</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-mot" value="alterada" onchange="onMotilidadeChange()"><span>Alterada</span></label>
           </div>
-          <div id="bullseye-container" style="display:none">
-            <div class="bullseye-wrap">
-              <svg class="bullseye-svg" id="bullseye-svg" viewBox="0 0 300 300" width="260" height="260"></svg>
-              <div class="bullseye-legend">
-                <h4>Estado a aplicar</h4>
-                <div class="legend-item active" data-state="hipocinesia" onclick="selectBullseyeState('hipocinesia')"><div class="legend-swatch" style="background:#fde68a"></div>Hipocinesia</div>
-                <div class="legend-item" data-state="acinesia" onclick="selectBullseyeState('acinesia')"><div class="legend-swatch" style="background:#fb923c"></div>Acinesia</div>
-                <div class="legend-item" data-state="discinesia" onclick="selectBullseyeState('discinesia')"><div class="legend-swatch" style="background:#ef4444"></div>Discinesia</div>
-                <div class="legend-item" data-state="aneurisma" onclick="selectBullseyeState('aneurisma')"><div class="legend-swatch" style="background:#a855f7"></div>Aneurisma</div>
-                <div class="legend-item" data-state="normal" onclick="selectBullseyeState('normal')"><div class="legend-swatch"></div>Normal (limpar)</div>
-                <button class="bullseye-clear" onclick="clearBullseye()">Limpar tudo</button>
+          <div id="segs-container" style="display:none">
+
+            <div class="seg-state-bar">
+              <span class="opt-label" style="margin-bottom:6px">Estado a aplicar</span>
+              <div class="opts-grid" id="seg-state-grid">
+                <label class="opt-chip sel seg-state" data-state="hipocinesia"><input type="radio" name="seg-state" value="hipocinesia" checked><span>Hipocinesia</span></label>
+                <label class="opt-chip seg-state" data-state="acinesia"><input type="radio" name="seg-state" value="acinesia"><span>Acinesia</span></label>
+                <label class="opt-chip seg-state" data-state="discinesia"><input type="radio" name="seg-state" value="discinesia"><span>Discinesia</span></label>
+                <label class="opt-chip seg-state" data-state="aneurisma"><input type="radio" name="seg-state" value="aneurisma"><span>Aneurisma</span></label>
+              </div>
+              <div class="hint">Escolha o estado, depois marque os segmentos abaixo. Clicar novamente em um segmento marcado o limpa.</div>
+            </div>
+
+            <div class="seg-region">
+              <div class="seg-region-head">Basal · 6 segmentos</div>
+              <div class="seg-grid">
+                <label class="seg-chip" data-seg="basal-anterior"><span class="seg-tick"></span>Anterior</label>
+                <label class="seg-chip" data-seg="basal-anterosseptal"><span class="seg-tick"></span>Anterosseptal</label>
+                <label class="seg-chip" data-seg="basal-inferosseptal"><span class="seg-tick"></span>Inferosseptal</label>
+                <label class="seg-chip" data-seg="basal-inferior"><span class="seg-tick"></span>Inferior</label>
+                <label class="seg-chip" data-seg="basal-inferolateral"><span class="seg-tick"></span>Inferolateral</label>
+                <label class="seg-chip" data-seg="basal-anterolateral"><span class="seg-tick"></span>Anterolateral</label>
               </div>
             </div>
+
+            <div class="seg-region">
+              <div class="seg-region-head">Médio · 6 segmentos</div>
+              <div class="seg-grid">
+                <label class="seg-chip" data-seg="mid-anterior"><span class="seg-tick"></span>Anterior</label>
+                <label class="seg-chip" data-seg="mid-anterosseptal"><span class="seg-tick"></span>Anterosseptal</label>
+                <label class="seg-chip" data-seg="mid-inferosseptal"><span class="seg-tick"></span>Inferosseptal</label>
+                <label class="seg-chip" data-seg="mid-inferior"><span class="seg-tick"></span>Inferior</label>
+                <label class="seg-chip" data-seg="mid-inferolateral"><span class="seg-tick"></span>Inferolateral</label>
+                <label class="seg-chip" data-seg="mid-anterolateral"><span class="seg-tick"></span>Anterolateral</label>
+              </div>
+            </div>
+
+            <div class="seg-region">
+              <div class="seg-region-head">Apical · 4 segmentos + ápex</div>
+              <div class="seg-grid">
+                <label class="seg-chip" data-seg="ap-anterior"><span class="seg-tick"></span>Anterior</label>
+                <label class="seg-chip" data-seg="ap-septal"><span class="seg-tick"></span>Septal</label>
+                <label class="seg-chip" data-seg="ap-inferior"><span class="seg-tick"></span>Inferior</label>
+                <label class="seg-chip" data-seg="ap-lateral"><span class="seg-tick"></span>Lateral</label>
+                <label class="seg-chip seg-apex" data-seg="apex"><span class="seg-tick"></span>Ápex</label>
+              </div>
+            </div>
+
+            <div class="seg-actions">
+              <button type="button" class="seg-btn-diffuse" onclick="applyDiffuse()">Marcar todos como difuso</button>
+              <button type="button" class="seg-btn-clear" onclick="clearSegments()">Limpar tudo</button>
+            </div>
+            <div id="seg-preview" class="seg-preview"></div>
           </div>
           <div class="divider"></div>
           <span class="opt-label">Função diastólica (ASE 2025)</span>
@@ -412,10 +474,15 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip"><input type="radio" name="ve-diast" value="grau-2"><span>Grau II</span></label>
             <label class="opt-chip"><input type="radio" name="ve-diast" value="grau-3"><span>Grau III</span></label>
             <label class="opt-chip"><input type="radio" name="ve-diast" value="indet"><span>Indeterminada</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="na-mp"><span>Não avaliada (marcapasso)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="na-valv"><span>Não avaliada (valvopatia)</span></label>
           </div>
           <div class="field-row cols-2">
             <div class="fld fld-suffix"><label>E/e' (médio)</label><input id="ve-ee" type="number" step="0.1" placeholder="—"><span class="suffix"></span></div>
             <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Aparece no laudo se preenchido</div></div>
+          </div>
+          <div class="opts-grid">
+            <label class="opt-chip"><input type="checkbox" name="ve-pres-ench"><span>Há sinais de aumento das pressões de enchimento</span></label>
           </div>
         </div>
       </div>
@@ -484,16 +551,43 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="opts-grid dense">
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="discretamente espessadas"><span>Disc. espessadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="espessadas"><span>Espessadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="abertura e mobilidade muito reduzidas"><span>Abert/mobil. muito reduzidas</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com cúspide anterior alongada"><span>Cúspide ant. alongada</span></label>
-              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com calcificação do anel mitral posterior"><span>Calc. anel mitral</span></label>
-              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso valvar"><span>Prolapso</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso valvar"><span>Prolapso (1 cúspide)</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso de ambas as cúspides"><span>Prolapso (ambas)</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com disjunção do anel valvar"><span>Disjunção do anel</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com vegetação"><span>Vegetação</span></label>
+            </div>
+            <span class="opt-label">Calcificação do anel (opcional)</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vm-calc" value=""><span>Sem</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação discreta do anel mitral posterior"><span>Disc. anel post.</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação moderada do anel posterior"><span>Mod. anel post.</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação importante do anel valvar"><span>Imp. anel valvar</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação do anel mitral posterior"><span>Sem grau (anel post.)</span></label>
+            </div>
+            <span class="opt-label">Imagem ecogênica / vegetação</span>
+            <div class="opts-grid">
               <label class="opt-chip" id="vm-img-chip"><input type="checkbox" id="vm-img-chk"><span>Imagem ecogênica móvel</span></label>
+              <label class="opt-chip" id="vm-veg-chip"><input type="checkbox" id="vm-veg-chk"><span>Aspecto algodonoso filamentar</span></label>
+              <label class="opt-chip" id="vm-cusp-chip"><input type="checkbox" id="vm-cusp-chk"><span>Espessamento de margens livres</span></label>
             </div>
             <div id="vm-img-row" style="display:none">
+              <span class="opt-label">Detalhes da imagem ecogênica</span>
               <div class="field-row cols-2">
                 <div class="fld fld-suffix"><label>Tamanho</label><input id="vm-img-size" type="number" step="0.1" placeholder="mm"><span class="suffix">mm</span></div>
                 <div class="fld"><label>Face</label><select id="vm-img-face"><option value="atrial">atrial</option><option value="ventricular">ventricular</option><option value="atrial e ventricular">atrial e ventricular</option></select></div>
+              </div>
+            </div>
+            <div id="vm-veg-row" style="display:none">
+              <span class="opt-label">Detalhes da vegetação algodonosa</span>
+              <div class="fld fld-suffix"><label>Tamanho</label><input id="vm-veg-size" type="number" step="0.1" placeholder="mm"><span class="suffix">mm</span></div>
+            </div>
+            <div id="vm-cusp-row" style="display:none">
+              <span class="opt-label">Medidas por cúspide</span>
+              <div class="field-row cols-2">
+                <div class="fld"><label>Anterior (ex: 9x6)</label><input id="vm-cusp-ant" type="text" placeholder="9mm x 6mm"></div>
+                <div class="fld"><label>Posterior (ex: 8x3)</label><input id="vm-cusp-post" type="text" placeholder="8mm x 3mm"></div>
               </div>
             </div>
             <span class="opt-label">Refluxo</span>
@@ -501,7 +595,9 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="vm-refl" value=""><span>Sem</span></label>
               <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
               <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo discreto a moderado"><span>Disc. a mod.</span></label>
               <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo moderado a importante"><span>Mod. a imp.</span></label>
               <label class="opt-chip"><input type="radio" name="vm-refl" value="Refluxo importante"><span>Importante</span></label>
             </div>
             <div class="opts-grid">
@@ -515,9 +611,25 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose moderada"><span>Moderada</span></label>
               <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose importante"><span>Importante</span></label>
             </div>
-            <div class="field-row cols-2">
+            <div class="field-row cols-3">
+              <div class="fld fld-suffix"><label>Grad. máximo</label><input id="vm-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Área valvar</label><input id="vm-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld"><label>Tipo de gradiente</label>
+                <select id="vm-grad-tipo">
+                  <option value="AE-VE">AE-VE</option>
+                  <option value="diastólico">diastólico</option>
+                  <option value="">sem prefixo (só "Gradiente")</option>
+                </select>
+              </div>
+              <div class="fld"><label>Método área valvar</label>
+                <select id="vm-area-met">
+                  <option value="PHT">PHT</option>
+                  <option value="">não especificar</option>
+                </select>
+              </div>
             </div>
             <div id="sugest-vm"></div>
           </div>
@@ -545,7 +657,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Imagem sugestiva de trombo"><span>Trombo</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Pannus"><span>Pannus</span></label>
             </div>
-            <div class="field-row cols-2">
+            <div class="field-row cols-3">
+              <div class="fld fld-suffix"><label>Grad. máximo</label><input id="vm-prot-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-prot-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Área efetiva</label><input id="vm-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
             </div>
@@ -559,7 +672,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
           <div class="toggle">
             <button class="active" data-val="normal" onclick="setMode('va','normal')">Normal</button>
             <button data-val="alterado" onclick="setMode('va','alterado')">Alterada</button>
-            <button data-val="protese" onclick="setMode('va','protese')">Prótese / TAVI</button>
+            <button data-val="protese" onclick="setMode('va','protese')">Prótese</button>
           </div>
           <span class="opt-label">Anatomia</span>
           <div class="opts-grid">
@@ -580,7 +693,9 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="va-refl" value=""><span>Sem</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo discreto a moderado"><span>Disc. a mod.</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo moderado a importante"><span>Mod. a imp.</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo importante"><span>Importante</span></label>
             </div>
             <span class="opt-label">Estenose</span>
@@ -591,10 +706,25 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="va-est" value="Estenose moderada"><span>Moderada</span></label>
               <label class="opt-chip"><input type="radio" name="va-est" value="Estenose importante"><span>Importante</span></label>
             </div>
-            <div class="field-row cols-3">
+            <div class="field-row cols-4">
               <div class="fld fld-suffix"><label>Vmax</label><input id="va-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
+              <div class="fld fld-suffix"><label>Grad. máximo</label><input id="va-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="va-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Área valvar</label><input id="va-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld"><label>Tipo de gradiente</label>
+                <select id="va-grad-tipo">
+                  <option value="sistólico">sistólico</option>
+                  <option value="">sem prefixo (só "Gradiente")</option>
+                </select>
+              </div>
+              <div class="fld"><label>Método área valvar</label>
+                <select id="va-area-met">
+                  <option value="Equação de Continuidade">Equação de Continuidade</option>
+                  <option value="">não especificar</option>
+                </select>
+              </div>
             </div>
             <div id="sugest-va"></div>
           </div>
@@ -617,8 +747,9 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="va-prot-perival" value="Refluxo perivalvar moderado"><span>Moderado</span></label>
               <label class="opt-chip"><input type="radio" name="va-prot-perival" value="Refluxo perivalvar importante"><span>Importante</span></label>
             </div>
-            <div class="field-row cols-3">
+            <div class="field-row cols-4">
               <div class="fld fld-suffix"><label>Vmax</label><input id="va-prot-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
+              <div class="fld fld-suffix"><label>Grad. máximo</label><input id="va-prot-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="va-prot-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Área efetiva</label><input id="va-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
             </div>
@@ -638,8 +769,16 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="opts-grid">
               <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo mínimo"><span>Mínimo</span></label>
               <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo discreto"><span>Discreto</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo discreto a moderado"><span>Disc. a mod.</span></label>
               <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo moderado"><span>Moderado</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo moderado a importante"><span>Mod. a imp.</span></label>
               <label class="opt-chip"><input type="radio" name="vt-refl" value="Refluxo importante"><span>Importante</span></label>
+            </div>
+            <span class="opt-label">Causa do refluxo (opcional)</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vt-refl-causa" value=""><span>Não especificar</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="secundário a dilatação do anel"><span>Sec. dilatação anel</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="funcional"><span>Funcional</span></label>
             </div>
           </div>
           <div class="hint" style="margin-top:7px">Dados de PSAP são reportados na Valva Pulmonar (próxima seção).</div>
@@ -713,8 +852,16 @@ body[data-density="compact"] .section{margin-bottom:8px}
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="septo" value="normal" checked><span>Sem shunt</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="fop"><span>FOP / CIA OS</span></label>
+            <label class="opt-chip"><input type="radio" name="septo" value="fop-pos-ablacao"><span>Shunt lâmina fossa oval (pós-ablação)</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="cia"><span>CIA com shunt</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="civ"><span>CIV</span></label>
+          </div>
+          <div class="divider"></div>
+          <span class="opt-label">Pesquisa de shunt com contraste (microbolhas)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="septo-micro" value="" checked><span>Não realizada</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-micro" value="negativa"><span>Negativa</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-micro" value="positiva"><span>Positiva</span></label>
           </div>
         </div>
       </div>
@@ -736,6 +883,39 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="fld fld-suffix"><label>VCI (opcional)</label><input id="vci-mm" type="number" placeholder="mm"><span class="suffix">mm</span></div>
             <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Aparece como linha solta após Septos</div></div>
           </div>
+        </div>
+      </div>
+
+      <div class="section ete-only" data-id="ete" id="sec-ete" style="display:none">
+        <div class="sec-head"><div class="sec-num">E</div><div class="sec-title">Complementação Transesofágica</div></div>
+        <div class="sec-body">
+          <div class="toggle">
+            <button class="active" data-val="transesofagica" onclick="setEteTipo('transesofagica')">"com complementação transesofágica"</button>
+            <button data-val="esofagica" onclick="setEteTipo('esofagica')">"com complementação esofágica"</button>
+          </div>
+          <span class="opt-label">Drenagem das veias pulmonares</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ete-veias" value="normal" checked><span>Drenagem normal</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-veias" value="habitual"><span>Drenagem habitual</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-veias" value="anomala"><span>Drenagem anômala</span></label>
+          </div>
+          <span class="opt-label">Apêndice atrial esquerdo</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ete-apend" value="normocontrátil" checked><span>Normocontrátil</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-apend" value="hipocontrátil"><span>Hipocontrátil</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-apend" value="acontrátil"><span>Acontrátil</span></label>
+          </div>
+          <span class="opt-label">Trombos</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ete-trombos" value="ausencia" checked><span>Ausência</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-trombos" value="presenca"><span>Presença (descrever)</span></label>
+          </div>
+          <span class="opt-label">Vegetação (ETE)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ete-veg" value="ausencia" checked><span>Ausência</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-veg" value="presenca"><span>Presença (descrever)</span></label>
+          </div>
+          <div class="fld" style="margin-top:9px"><label>Observação adicional ETE (opcional)</label><textarea id="ete-obs" rows="2" placeholder="Detalhes adicionais do ETE..."></textarea></div>
         </div>
       </div>
 
