@@ -706,8 +706,9 @@ function genReport() {
     aortaTxt = 'Raiz da aorta, aorta ascendente e arco aórtico com diâmetros normais.';
   } else {
     let partes = [];
-    if (raizClass) partes.push(`Dilatação ${raizClass} da raiz da aorta${aoraiz ? ` (${aoraiz}mm)` : ''}`);
-    if (ascClass) partes.push(`Dilatação ${ascClass} da aorta ascendente${aoasc ? ` (${aoasc}mm)` : ''}`);
+    const aoTermo = (document.getElementById('aorta-termo') && document.getElementById('aorta-termo').value) || 'Dilatação';
+    if (raizClass) partes.push(`${aoTermo} ${raizClass} da raiz da aorta${aoraiz ? ` (${aoraiz}mm)` : ''}`);
+    if (ascClass) partes.push(`${aoTermo} ${ascClass} da aorta ascendente${aoasc ? ` (${aoasc}mm)` : ''}`);
     const normais = [];
     if (!raizClass && aoraiz) normais.push('raiz da aorta');
     if (!ascClass && aoasc && !otherExtras.includes('Ascendente não visualizada adequadamente')) normais.push('aorta ascendente');
@@ -770,6 +771,9 @@ function genReport() {
   const veLines = [espMap[veEsp], cavMap[veCav]];
   if (veEsp !== 'preservada') altered.push('ve-esp');
   if (veCav !== 'normal') altered.push('ve-cav');
+
+  const veSeptoMorf = getRadio('ve-septomorf');
+  if (veSeptoMorf) { veLines.push(veSeptoMorf); altered.push('ve-septomorf'); }
 
   let motText = '';
   if (veMot === 'alterada' && Object.keys(state.bullseye).length) motText = bullseyeText();
@@ -853,6 +857,8 @@ function genReport() {
     altered.push('vd');
   }
   if (tapse) vdTxt += ` TAPSE= ${tapse}mm.`;
+  const vdS = num('vd-s');
+  if (vdS !== null) vdTxt += ` Onda S' = ${fmt(vdS, 1)}cm/s.`;
   if (vdObs.length) vdTxt += ' ' + vdObs.join(' ');
   R.sections.push({ lbl:'VENTRÍCULO DIREITO', txt:vdTxt });
 
@@ -939,6 +945,13 @@ function genReport() {
   R.sections.push({ lbl:'SEPTO INTERVENTRICULAR E INTERATRIAL', txt:septoTxt });
   if (sep !== 'normal') altered.push('septo:' + sep);
 
+  const septoIa = getRadio('septo-ia');
+  if (septoIa) {
+    // anexa à frase de septos já adicionada
+    R.sections[R.sections.length - 1].txt += ' ' + septoIa;
+    altered.push('septo-ia');
+  }
+
   // VCI (linha solta)
   if (state.mode.vci !== 'omitir') {
     const vci = getRadio('vci') || 'normal';
@@ -957,6 +970,22 @@ function genReport() {
     R.extras.push(vciTxt);
     if (vci !== 'normal') altered.push('vci');
   }
+
+  // Trombo/massa intracavitária (texto livre com dimensões)
+  const massaTxt = document.getElementById('achado-massa') ? document.getElementById('achado-massa').value.trim() : '';
+  if (massaTxt) {
+    R.extras.push(massaTxt.endsWith('.') ? massaTxt : massaTxt + '.');
+    altered.push('massa');
+  }
+
+  // Derrame pleural (achado extracardíaco)
+  const plE = document.getElementById('achado-pleural-e')?.checked;
+  const plD = document.getElementById('achado-pleural-d')?.checked;
+  const plB = document.getElementById('achado-pleural-bilat')?.checked;
+  if (plB) { R.extras.push('Achado extracardíaco: derrame pleural bilateral.'); altered.push('pleural'); }
+  else if (plE && plD) { R.extras.push('Achado extracardíaco: derrame pleural bilateral.'); altered.push('pleural'); }
+  else if (plE) { R.extras.push('Achado extracardíaco: derrame pleural à esquerda.'); altered.push('pleural'); }
+  else if (plD) { R.extras.push('Achado extracardíaco: derrame pleural à direita.'); altered.push('pleural'); }
 
   // ETE
   if (state.tipo === 'ETE') {
@@ -1027,6 +1056,12 @@ function buildMitralSection(altered) {
     const cuspPost = document.getElementById('vm-cusp-post').value.trim();
     const refl = getRadio('vm-refl');
     const reflTipos = getChecks('vm-refl-tipo');
+    const reflSec = document.getElementById('vm-refl-sec')?.checked;
+    const vena = num('vm-vena');
+    const wMob = document.getElementById('vm-wilk-mob')?.value;
+    const wSub = document.getElementById('vm-wilk-sub')?.value;
+    const wFol = document.getElementById('vm-wilk-fol')?.value;
+    const wCalc = document.getElementById('vm-wilk-calc')?.value;
     const est = getRadio('vm-est');
     const gradMax = num('vm-grad-max');
     const grad = num('vm-grad');
@@ -1037,9 +1072,12 @@ function buildMitralSection(altered) {
     // morfologia base + adicionais
     let cuspideBase = 'Cúspides finas';
     let modif = [];
+    const hasDomo = morf.includes('reumática-domo');
+    const hasFusao = morf.includes('fusão comissural');
     morf.forEach(m => {
       if (m === 'discretamente espessadas') cuspideBase = 'Cúspides discretamente espessadas';
       else if (m === 'espessadas') cuspideBase = 'Cúspides espessadas';
+      else if (m === 'reumática-domo' || m === 'fusão comissural') { /* tratados à parte */ }
       else modif.push(m);
     });
 
@@ -1066,6 +1104,14 @@ function buildMitralSection(altered) {
       morfLine = cuspideBase + (modif.length ? ', ' + modif.join(', ') : '') + '. Abertura preservada';
     }
 
+    // Morfologia reumática: substitui "Abertura preservada" pela descrição em domo
+    if (hasDomo) {
+      morfLine = morfLine.replace(/\.?\s*Abertura preservada$/,
+        ', com abertura em domo da cúspide anterior e mobilidade reduzida da cúspide posterior');
+      if (!/em domo/.test(morfLine)) morfLine += ', com abertura em domo da cúspide anterior e mobilidade reduzida da cúspide posterior';
+    }
+    if (hasFusao) morfLine += '. Presença de fusão comissural';
+
     // Calcificação como frase separada
     if (calc) morfLine += `. ${calc}`;
 
@@ -1085,7 +1131,9 @@ function buildMitralSection(altered) {
     let dopplerLine;
     if (refl) {
       dopplerLine = `Ao Doppler exibe ${refl.toLowerCase()}`;
+      if (reflSec) dopplerLine += ' (secundário)';
       if (reflTipos.length) dopplerLine += ' ' + reflTipos.join(' e ');
+      if (vena !== null) dopplerLine += ` (vena contracta= ${fmt(vena, 1)}mm)`;
     } else dopplerLine = 'Ao Doppler não exibe refluxo';
 
     // Gradientes com prefixo
@@ -1119,7 +1167,12 @@ function buildMitralSection(altered) {
     }
 
     altered.push('vm');
-    return { lbl:'VALVA MITRAL', txt:`${morfLine}. ${dopplerLine}.${finalSentence}` };
+    let wilkinsSentence = '';
+    if (wMob && wSub && wFol && wCalc) {
+      const soma = Number(wMob) + Number(wSub) + Number(wFol) + Number(wCalc);
+      wilkinsSentence = ` Escore Wilkins: ${soma} (mobilidade=${wMob}; subvalvar=${wSub}; folhetos=${wFol}; calcificacao=${wCalc}).`;
+    }
+    return { lbl:'VALVA MITRAL', txt:`${morfLine}. ${dopplerLine}.${finalSentence}${wilkinsSentence}` };
   }
   return { lbl:'VALVA MITRAL', txt:'Cúspides finas, abertura e mobilidade preservadas. Ao Doppler não exibe refluxo, sem gradiente transvalvar significativo.' };
 }
@@ -1162,14 +1215,18 @@ function buildAorticaSection(altered) {
     let base = vaAnat === 'bicuspide' ? 'Valva aórtica bicúspide' : 'Trivalvular';
     let cuspideDesc = 'com válvulas finas';
     let modif = [];
+    let aoDomo = false;
     morf.forEach(m => {
       if (m === 'discretamente espessadas') cuspideDesc = 'com válvulas discretamente espessadas';
       else if (m === 'espessadas') cuspideDesc = 'com válvulas espessadas';
       else if (m === 'calcificadas') modif.push('com calcificação');
+      else if (m === 'pontos de calcificação') modif.push('pontos de calcificação');
+      else if (m === 'abertura em domo') aoDomo = true;
       else if (m === 'janela limitada') modif.push('não foi possível avaliar sua morfologia devido janela acústica limitada');
       else modif.push(m);
     });
-    let morfLine = `${base} ${cuspideDesc}` + (modif.length ? ', ' + modif.join(', ') : '') + ', abertura e mobilidade preservadas';
+    const fechoAbertura = aoDomo ? 'abertura em domo' : 'abertura e mobilidade preservadas';
+    let morfLine = `${base} ${cuspideDesc}` + (modif.length ? ', ' + modif.join(', ') : '') + ', ' + fechoAbertura;
 
     let dopplerLine = refl ? `Ao Doppler exibe ${refl.toLowerCase()}` : 'Ao Doppler não exibe refluxo';
 
@@ -1314,11 +1371,14 @@ function genAutoConcl(altered) {
     if (map[s]) lines.push(map[s]);
   }
   if (altered.includes('vd')) lines.push('Alterações de dimensão e/ou função do VD');
+  if (altered.includes('massa')) lines.push('Imagem intracavitária descrita no corpo do laudo');
+  if (altered.includes('pleural')) lines.push('Derrame pleural (vide achados)');
   if (altered.includes('aorta')) {
     const r = classifyAoRaiz(num('m-aoraiz'));
     const a = classifyAoAsc(num('m-aoasc'));
-    if (r) lines.push(`Dilatação ${r} da raiz da aorta`);
-    if (a) lines.push(`Dilatação ${a} da aorta ascendente`);
+    const aoTermo = (document.getElementById('aorta-termo') && document.getElementById('aorta-termo').value) || 'Dilatação';
+    if (r) lines.push(`${aoTermo} ${r} da raiz da aorta`);
+    if (a) lines.push(`${aoTermo} ${a} da aorta ascendente`);
   }
   // ETE: linhas extras
   if (altered.includes('ete:trombo')) lines.push('Presença de imagens sugestivas de trombos (ETE)');
@@ -1509,7 +1569,7 @@ function resetAll() {
     'vm-prot-perival::','va-prot-perival::',
     'peri-loc::circunferencial','peri-rep::sem','vp-base::normal',
     'ete-veias::normal','ete-apend::normocontrátil','ete-trombos::ausencia','ete-veg::ausencia',
-    'vt-refl-causa::','vm-calc::'
+    'vt-refl-causa::','vm-calc::','ve-septomorf::','septo-ia::'
   ];
   defaults.forEach(d => {
     const [name, val] = d.split('::');
@@ -1526,6 +1586,8 @@ function resetAll() {
   const vmAreaMet = document.getElementById('vm-area-met'); if (vmAreaMet) vmAreaMet.value = 'PHT';
   const vaGradTipo = document.getElementById('va-grad-tipo'); if (vaGradTipo) vaGradTipo.value = 'sistólico';
   const vaAreaMet = document.getElementById('va-area-met'); if (vaAreaMet) vaAreaMet.value = 'Equação de Continuidade';
+  const aoTermoSel = document.getElementById('aorta-termo'); if (aoTermoSel) aoTermoSel.value = 'Dilatação';
+  ['vm-wilk-mob','vm-wilk-sub','vm-wilk-fol','vm-wilk-calc'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
   document.getElementById('vm-img-row').style.display = 'none';
   const vmVegRow = document.getElementById('vm-veg-row'); if (vmVegRow) vmVegRow.style.display = 'none';
   const vmCuspRow = document.getElementById('vm-cusp-row'); if (vmCuspRow) vmCuspRow.style.display = 'none';

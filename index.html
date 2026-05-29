@@ -335,6 +335,10 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <button data-val="alterado" onclick="setMode('aorta','alterado')">Personalizar</button>
           </div>
           <div class="hint">Auto: ≤37 N · 38–44 disc · 45–51 mod · ≥52 imp (raiz). ≤35 N · 36–42 disc · 43–49 mod · ≥50 imp (ascendente).</div>
+          <div class="field-row cols-2" style="margin-top:7px">
+            <div class="fld"><label>Termo p/ aumento</label><select id="aorta-termo"><option value="Dilatação">Dilatação</option><option value="Ectasia">Ectasia</option></select></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Dra. usa "Dilatação" ou "Ectasia" (nunca "Aumento")</div></div>
+          </div>
           <div class="alt-body" id="alt-aorta" style="display:none;margin-top:9px">
             <span class="opt-label">Achados adicionais</span>
             <div class="opts-grid dense" id="opts-aorta">
@@ -342,6 +346,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" value="Ascendente não visualizada adequadamente"><span>Ascendente mal vis.</span></label>
               <label class="opt-chip"><input type="checkbox" value="Calcificação parietal"><span>Calcificação</span></label>
               <label class="opt-chip"><input type="checkbox" value="Ateromatose aórtica"><span>Ateromatose</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Ateromatose calcificada da aorta descendente"><span>Ateromatose calcif. (desc.)</span></label>
+              <label class="opt-chip"><input type="checkbox" value="Espessamento da camada íntima da aorta"><span>Espessam. da íntima</span></label>
               <label class="opt-chip"><input type="checkbox" value="Tubo protético em aorta ascendente"><span>Tubo protético</span></label>
               <label class="opt-chip"><input type="checkbox" value="Fluxo e pulsatilidade normais"><span>Fluxo e pulsat. normais</span></label>
             </div>
@@ -385,6 +391,13 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-descritiva"><span>Aumento simétrico (descritivo)</span></label>
           </div>
           <div class="hint">Auto a partir de massa indexada + ERP (item 1)</div>
+          <span class="opt-label" style="margin-top:10px">Morfologia do septo interventricular (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="ve-septomorf" value="" checked><span>Não descrever</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com formato sigmoide."><span>Sigmoide</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com movimentação assincrônica (marcapasso)."><span>Assincrônico (MP)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular retificado (sobrecarga pressórica à direita)."><span>Retificado (sobrec. D)</span></label>
+          </div>
           <div class="divider"></div>
           <span class="opt-label">Cavidade ventricular</span>
           <div class="opts-grid">
@@ -533,7 +546,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
           </div>
           <div class="field-row cols-2" style="margin-top:9px">
             <div class="fld fld-suffix"><label>TAPSE (opcional)</label><input id="vd-tapse" type="number" placeholder="mm"><span class="suffix">mm</span></div>
-            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">TAPSE ≥ 17 = normal</div></div>
+            <div class="fld fld-suffix"><label>Onda S' (opcional)</label><input id="vd-s" type="number" step="0.1" placeholder="cm/s"><span class="suffix">cm/s</span></div>
           </div>
         </div>
       </div>
@@ -552,6 +565,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="discretamente espessadas"><span>Disc. espessadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="espessadas"><span>Espessadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="abertura e mobilidade muito reduzidas"><span>Abert/mobil. muito reduzidas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="reumática-domo"><span>Domo (cúsp. ant. reumática)</span></label>
+              <label class="opt-chip"><input type="checkbox" name="vm-morf" value="fusão comissural"><span>Fusão comissural</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com cúspide anterior alongada"><span>Cúspide ant. alongada</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso valvar"><span>Prolapso (1 cúspide)</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-morf" value="com prolapso de ambas as cúspides"><span>Prolapso (ambas)</span></label>
@@ -603,6 +618,18 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="opts-grid">
               <label class="opt-chip"><input type="checkbox" name="vm-refl-tipo" value="excêntrico"><span>Jato excêntrico</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-refl-tipo" value="central"><span>Jato central</span></label>
+              <label class="opt-chip"><input type="checkbox" id="vm-refl-sec"><span>Secundário (funcional)</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>Vena contracta (opcional)</label><input id="vm-vena" type="number" step="0.1" placeholder="mm"><span class="suffix">mm</span></div>
+              <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Sai como "(vena contracta= Xmm)"</div></div>
+            </div>
+            <span class="opt-label">Escore de Wilkins (opcional — estenose reumática)</span>
+            <div class="field-row cols-4">
+              <div class="fld"><label>Mobilidade</label><select id="vm-wilk-mob"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+              <div class="fld"><label>Subvalvar</label><select id="vm-wilk-sub"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+              <div class="fld"><label>Folhetos</label><select id="vm-wilk-fol"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+              <div class="fld"><label>Calcificação</label><select id="vm-wilk-calc"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
             </div>
             <span class="opt-label">Estenose</span>
             <div class="opts-grid">
@@ -685,6 +712,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="discretamente espessadas"><span>Disc. espessadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="espessadas"><span>Espessadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="calcificadas"><span>Calcificadas</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="pontos de calcificação"><span>Pontos de calcificação</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="abertura em domo"><span>Abertura em domo</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="com vegetação"><span>Vegetação</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="janela limitada"><span>Janela limitada</span></label>
             </div>
@@ -862,6 +891,23 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip sel"><input type="radio" name="septo-micro" value="" checked><span>Não realizada</span></label>
             <label class="opt-chip"><input type="radio" name="septo-micro" value="negativa"><span>Negativa</span></label>
             <label class="opt-chip"><input type="radio" name="septo-micro" value="positiva"><span>Positiva</span></label>
+          </div>
+          <div class="divider"></div>
+          <span class="opt-label">Septo interatrial (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="septo-ia" value="" checked><span>Sem descrição</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial redundante."><span>Redundante</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial com hipertrofia lipomatosa."><span>Hipertrofia lipomatosa</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial aneurismático."><span>Aneurismático</span></label>
+          </div>
+          <div class="divider"></div>
+          <span class="opt-label">Trombo / massa intracavitária (opcional)</span>
+          <div class="fld"><label>Descrição com dimensões</label><textarea id="achado-massa" rows="2" placeholder="Ex: imagem hiperecogênica, pediculada, aderida ao ápice do VE, medindo 2,4 x 1,1cm, sugestiva de trombo"></textarea></div>
+          <span class="opt-label" style="margin-top:7px">Achado extracardíaco (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip"><input type="checkbox" id="achado-pleural-e"><span>Derrame pleural à esquerda</span></label>
+            <label class="opt-chip"><input type="checkbox" id="achado-pleural-d"><span>Derrame pleural à direita</span></label>
+            <label class="opt-chip"><input type="checkbox" id="achado-pleural-bilat"><span>Derrame pleural bilateral</span></label>
           </div>
         </div>
       </div>

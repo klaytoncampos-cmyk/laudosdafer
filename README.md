@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/28327692/README.md)
 # Laudos da Fer — Setup completo
 
 Gerador de laudos de ecocardiograma para Dra. Fernanda Andre Carbonieri (Santa Casa de Londrina).
@@ -183,6 +182,44 @@ Abre em `http://localhost:8788`.
 ---
 
 ## O que tem nessa versão
+
+**Novidades V5 (revisão dos laudos do Hospital Evangélico — chefe da Dra. Fernanda):**
+
+*Decisão:* desses laudos foram extraídos apenas **padrões e vocabulário** (as duas médicas usam o mesmo). O formato do Evangélico (tabela de medidas/referência) foi descartado — o app continua gerando só no formato da Dra. Fernanda (Santa Casa).
+
+*Valva mitral:*
+- **Escore de Wilkins** (estenose reumática): 4 subscores 0–4 (mobilidade, subvalvar, folhetos, calcificação) + soma automática → "Escore Wilkins: X (mobilidade=a; subvalvar=b; folhetos=c; calcificacao=d)"
+- **Morfologia reumática**: "abertura em domo da cúspide anterior e mobilidade reduzida da cúspide posterior" + "Presença de fusão comissural"
+- Refluxo **(secundário)** (funcional) e quantificação por **vena contracta** (mm)
+
+*Valva aórtica:*
+- **Abertura em domo** (substitui o fecho "abertura e mobilidade preservadas")
+- **Pontos de calcificação** como qualificador separado de "calcificadas"
+
+*Aorta torácica:*
+- Seletor de termo **Dilatação / Ectasia** (nunca "Aumento") — aplica no corpo e na conclusão
+- Ateromatose calcificada da aorta descendente · Espessamento da camada íntima
+
+*Ventrículo esquerdo:*
+- **Morfologia do septo IV**: sigmoide / movimentação assincrônica (marcapasso) / retificado (sobrecarga pressórica à direita)
+
+*Ventrículo direito:*
+- Campo **onda S'** (cm/s) ao lado do TAPSE
+
+*Septos:*
+- **Septo interatrial**: redundante / hipertrofia lipomatosa / aneurismático
+
+*Achados adicionais:*
+- **Trombo / massa intracavitária** com dimensões (texto livre — antes só havia ausência/presença)
+- **Derrame pleural** (esq. / dir. / bilateral) como achado extracardíaco
+
+*Correção de bug:* o checkbox de refluxo secundário da mitral estava com `name` mas era lido por `getElementById` — nunca teria funcionado; corrigido para `id`.
+
+*Adiado para revisão da Dra. Fernanda (não implementado):* **ETE isolado** como exame próprio (hoje só existe como complementação do transtorácico) e **pesquisa de FOP com medidas do forame** — são estrutura nova grande, melhor validar o desenho antes.
+
+---
+
+## Versão anterior (V4)
 
 **Novidades V4 (revisão de 54+ laudos reais dela):**
 
