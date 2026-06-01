@@ -145,6 +145,17 @@ function getChecks(name) { return Array.from(document.querySelectorAll(`input[na
 function getChecksGrid(id) { return Array.from(document.querySelectorAll(`#${id} input[type="checkbox"]:checked`)).map(e=>e.value); }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+// Quebra um texto de seção em frases, uma por linha.
+// Só quebra em "ponto + espaço + início de nova frase" (letra maiúscula/acentuada).
+// Preserva decimais (1,1cm² nunca tem ". " no meio) e siglas como "a.e." não ocorrem aqui.
+function splitSentences(txt) {
+  if (!txt) return [];
+  // insere marcador após ". " quando o próximo caractere inicia nova frase
+  // (maiúscula A-Z, acentuadas, ou abre com algo como "Ao Doppler")
+  const marked = txt.replace(/\.\s+(?=[A-ZÀ-ÖØ-Þ])/g, '.\u0001');
+  return marked.split('\u0001').map(s => s.trim()).filter(Boolean);
+}
+
 function setMode(sec, mode) {
   state.mode[sec] = mode;
   const head = document.querySelector(`[data-id="${sec}"] .toggle`);
@@ -159,6 +170,7 @@ function setMode(sec, mode) {
   renderPreview();
   updateStatuses();
   updateNav();
+  if (typeof renderCorrelations === 'function') renderCorrelations();
 }
 
 function setConclMode(m) {
@@ -227,6 +239,7 @@ document.addEventListener('change', e => {
     updateStatuses();
     updateNav();
     updateStickyHeader();
+    renderCorrelations();
   }
 });
 
@@ -350,6 +363,7 @@ function autoFillFromMeasures() {
   const psap = parseFloat((document.getElementById('vt-psap').value || '0').replace(',', '.'));
   document.getElementById('vt-psap').closest('.fld').classList.toggle('fld-crit', psap >= 70);
   renderAlerts();
+  renderCorrelations();
 }
 
 function autoSelect(name, value) {
@@ -390,6 +404,56 @@ function renderAlerts() {
     alerts.push({ type:'warn', msg:'? VEd ≥ 68mm mas cavidade marcada normal' });
 
   zone.innerHTML = alerts.map(a => `<div class="${a.type === 'crit' ? 'crit-alert' : 'warn-alert'}">${a.msg}</div>`).join('');
+}
+
+// ════════════════════════════════════════
+// CORRELAÇÕES CLÍNICAS (lembretes discretos — aprovadas pela Dra.)
+// Só lembram do que AINDA não foi marcado. Nunca preenchem nada.
+// ════════════════════════════════════════
+function renderCorrelations() {
+  const zone = document.getElementById('correl-zone');
+  if (!zone) return;
+  const hints = [];
+
+  const feve = num('ve-feve');
+  const psap = parseFloat((document.getElementById('vt-psap').value || '0').replace(',', '.'));
+  const veEsp = getRadio('ve-esp');
+  const veCav = getRadio('ve-cav');
+  const veDiast = getRadio('ve-diast');
+  const aeAlt = state.mode.ae === 'alterado';
+  const psapAlt = psap >= 35;
+
+  // 1. Lesão valvar esquerda importante → lembrar AE aumentado + HP
+  const vmImp = getRadio('vm-est') === 'Estenose importante' || getRadio('vm-refl') === 'Refluxo importante';
+  const vaImp = getRadio('va-est') === 'Estenose importante' || getRadio('va-refl') === 'Refluxo importante';
+  if (vmImp || vaImp) {
+    const faltam = [];
+    if (!aeAlt) faltam.push('átrio esquerdo aumentado');
+    if (!psapAlt) faltam.push('hipertensão pulmonar (PSAP)');
+    if (faltam.length) hints.push(`<b>Lesão valvar importante</b> costuma vir com: ${faltam.join(' e ')}. Confira se aplica.`);
+  }
+
+  // 2. FEVE < 40% → lembrar cavidade VE / diástole / refluxo mitral secundário
+  if (feve !== null && feve < 40) {
+    const faltam = [];
+    if (veCav === 'normal') faltam.push('aumento da cavidade do VE');
+    if (veDiast === 'normal') faltam.push('disfunção diastólica');
+    const vmReflSec = document.getElementById('vm-refl-sec')?.checked;
+    if (!vmReflSec) faltam.push('refluxo mitral secundário');
+    if (faltam.length) hints.push(`<b>FEVE reduzida</b> costuma vir com: ${faltam.join(', ')}. Confira se aplica.`);
+  }
+
+  // 3. PSAP ≥ 50 → lembrar SÓ refluxo tricúspide (ajuste da Dra.)
+  if (psap >= 50) {
+    if (state.mode.vt !== 'alterado') hints.push('<b>PSAP elevada</b> costuma acompanhar refluxo tricúspide. Confira a valva tricúspide.');
+  }
+
+  // 4. Hipertrofia importante → lembrar SÓ disfunção diastólica (ajuste da Dra.)
+  if (veEsp === 'hve-concentrica-imp' || veEsp === 'hve-concentrica-mod-imp') {
+    if (veDiast === 'normal') hints.push('<b>Hipertrofia importante</b> costuma acompanhar disfunção diastólica. Confira a função diastólica.');
+  }
+
+  zone.innerHTML = hints.map(h => `<div class="correl-hint">💡 ${h}</div>`).join('');
 }
 
 // ════════════════════════════════════════
@@ -1016,6 +1080,10 @@ function genReport() {
   // CONCL
   if (state.concl === 'manual') R.conclusao = document.getElementById('concl-manual').value.trim();
   else R.conclusao = altered.length === 0 ? 'Exame dentro dos parâmetros da normalidade.' : genAutoConcl(altered);
+  const comparar = document.getElementById('concl-comparar')?.checked;
+  if (comparar && R.conclusao) {
+    R.conclusao += (R.conclusao.endsWith('.') ? '' : '.') + ' Obs.: não houve alteração significativa em relação ao exame anterior.';
+  }
   R.recom = document.getElementById('recom').value.trim();
   return R;
 }
@@ -1216,17 +1284,27 @@ function buildAorticaSection(altered) {
     let cuspideDesc = 'com válvulas finas';
     let modif = [];
     let aoDomo = false;
+    let aoCalcExtensa = false;
     morf.forEach(m => {
       if (m === 'discretamente espessadas') cuspideDesc = 'com válvulas discretamente espessadas';
       else if (m === 'espessadas') cuspideDesc = 'com válvulas espessadas';
       else if (m === 'calcificadas') modif.push('com calcificação');
       else if (m === 'pontos de calcificação') modif.push('pontos de calcificação');
+      else if (m === 'calcificação nas bordas livres') modif.push('com calcificação nas bordas livres');
       else if (m === 'abertura em domo') aoDomo = true;
+      else if (m === 'extensa calcificação degenerativa') aoCalcExtensa = true;
       else if (m === 'janela limitada') modif.push('não foi possível avaliar sua morfologia devido janela acústica limitada');
       else modif.push(m);
     });
-    const fechoAbertura = aoDomo ? 'abertura em domo' : 'abertura e mobilidade preservadas';
-    let morfLine = `${base} ${cuspideDesc}` + (modif.length ? ', ' + modif.join(', ') : '') + ', ' + fechoAbertura;
+    let morfLine;
+    if (aoCalcExtensa) {
+      // redação própria da Dra para estenose aórtica calcificada degenerativa
+      morfLine = `${base} ${cuspideDesc}`.replace('com válvulas finas', 'com válvulas');
+      morfLine += (modif.length ? ', ' + modif.join(', ') : '') + '. Análise morfológica de difícil avaliação devido a extensa calcificação. Abertura valvar significativamente reduzida';
+    } else {
+      const fechoAbertura = aoDomo ? 'abertura em domo' : 'abertura e mobilidade preservadas';
+      morfLine = `${base} ${cuspideDesc}` + (modif.length ? ', ' + modif.join(', ') : '') + ', ' + fechoAbertura;
+    }
 
     let dopplerLine = refl ? `Ao Doppler exibe ${refl.toLowerCase()}` : 'Ao Doppler não exibe refluxo';
 
@@ -1412,7 +1490,9 @@ function renderPreview() {
   if (R.beira) html += `<div class="p-section"><span class="p-text">Exame realizado beira-leito.</span></div>`;
   if (R.janela) html += `<div class="p-section"><span class="p-text">${R.janela}</span></div>`;
   R.sections.forEach(s => {
-    html += `<div class="p-section" style="margin-top:8px"><span class="p-label">${s.lbl}:</span> <span class="p-text">${s.txt}</span></div>`;
+    const frases = splitSentences(s.txt);
+    const corpo = frases.map(f => `<div class="p-text">${f}</div>`).join('');
+    html += `<div class="p-section" style="margin-top:8px"><span class="p-label">${s.lbl}:</span>${corpo}</div>`;
   });
   if (R.extras.length) {
     html += '<div class="p-section" style="margin-top:8px">' + R.extras.map(e => `<span class="p-text">${e}</span>`).join(' ') + '</div>';
@@ -1508,7 +1588,10 @@ function buildPlainReport() {
   if (R.beira) txt += 'Exame realizado beira-leito.\n';
   if (R.janela) txt += `${R.janela}\n`;
   txt += '\n';
-  R.sections.forEach(s => { txt += `${s.lbl}: ${s.txt}\n`; });
+  R.sections.forEach(s => {
+    const frases = splitSentences(s.txt);
+    txt += `${s.lbl}:\n${frases.join('\n')}\n`;
+  });
   if (R.extras.length) txt += '\n' + R.extras.join(' ') + '\n';
   if (R.eteLines && R.eteLines.length) txt += '\n' + R.eteLines.join('\n') + '\n';
   if (R.conclusao) txt += `\nCONCLUSÃO:\n${R.conclusao}\n`;
