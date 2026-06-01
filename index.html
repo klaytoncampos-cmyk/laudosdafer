@@ -130,6 +130,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
 .calc-item .ref{font-size:10px;color:var(--muted);margin-left:3px}
 .crit-alert{background:var(--crit-pale);border:1.5px solid var(--crit);border-radius:7px;padding:9px 12px;margin:9px 0;font-size:12px;color:var(--crit);font-weight:500}
 .warn-alert{background:var(--warn-pale);border:1.5px solid var(--warn);border-radius:7px;padding:9px 12px;margin:9px 0;font-size:12px;color:var(--warn);font-weight:500}
+.correl-hint{background:var(--accent-pale);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:7px 11px;margin:6px 0;font-size:11.5px;color:var(--text2);line-height:1.45}
+.correl-hint b{color:var(--accent);font-weight:700}
 .sugest-row{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 4px;padding:8px 9px;background:linear-gradient(to right,var(--auto-pale),transparent);border-left:2.5px solid var(--auto);border-radius:5px;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .sugest-label{font-size:9.5px;font-weight:700;color:var(--auto);text-transform:uppercase;letter-spacing:.05em;width:100%;margin-bottom:3px;display:flex;align-items:center;gap:5px}
@@ -714,6 +716,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="calcificadas"><span>Calcificadas</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="pontos de calcificação"><span>Pontos de calcificação</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="abertura em domo"><span>Abertura em domo</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="calcificação nas bordas livres"><span>Calcif. bordas livres</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="extensa calcificação degenerativa"><span>Extensa calcif. degener.</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="com vegetação"><span>Vegetação</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="janela limitada"><span>Janela limitada</span></label>
             </div>
@@ -966,6 +970,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
       </div>
 
       <div id="alerts-zone"></div>
+      <div id="correl-zone"></div>
 
       <div class="section" data-id="concl" id="sec-concl">
         <div class="sec-head"><div class="sec-num">★</div><div class="sec-title">Conclusão e Recomendações</div></div>
@@ -976,6 +981,9 @@ body[data-density="compact"] .section{margin-bottom:8px}
           </div>
           <div id="concl-auto-info" class="hint" style="margin-bottom:9px">Conclusão gerada dos achados. Sugestões aparecem abaixo conforme o caso.</div>
           <div class="fld" id="concl-manual-box" style="display:none"><label>Conclusão personalizada</label><textarea id="concl-manual" rows="4"></textarea></div>
+          <div class="opts-grid" style="margin-bottom:9px">
+            <label class="opt-chip"><input type="checkbox" id="concl-comparar"><span>Comparar com exame anterior</span></label>
+          </div>
           <div id="sugest-concl"></div>
           <div class="fld" style="margin-top:9px"><label>Recomendações (opcional)</label><textarea id="recom" rows="2" placeholder="Ex: sugere-se cintilografia..."></textarea></div>
         </div>
