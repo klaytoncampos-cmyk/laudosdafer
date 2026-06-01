@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/28480880/README.md)
 # Laudos da Fer — Setup completo
 
 Gerador de laudos de ecocardiograma para Dra. Fernanda Andre Carbonieri (Santa Casa de Londrina).
@@ -182,6 +183,29 @@ Abre em `http://localhost:8788`.
 ---
 
 ## O que tem nessa versão
+
+**Novidades V6 (01/06/2026):**
+
+*Formatação (pedido da Dra.):*
+- Cada frase de cada seção agora sai **numa linha própria**, no preview E no texto copiado. O rótulo da seção fica sozinho na linha e a primeira frase desce. A quebra só ocorre em "ponto + espaço + maiúscula", preservando decimais (1,1cm²) e abreviações.
+- A **CONCLUSÃO continua corrida** (sem quebra por frase), conforme decidido.
+
+*Vocabulário novo (rodada de laudos da Santa Casa):*
+- Valva aórtica: **estenose calcificada degenerativa** — chip "extensa calcif. degener." gera "Análise morfológica de difícil avaliação devido a extensa calcificação. Abertura valvar significativamente reduzida". Também chip "calcificação nas bordas livres".
+- Conclusão: checkbox **"Comparar com exame anterior"** anexa "Obs.: não houve alteração significativa em relação ao exame anterior".
+
+*Correlações clínicas (lembretes discretos, aprovados pela Dra.):*
+- Aparecem como dicas suaves (azul) abaixo dos alertas, e **só lembram do que ainda não foi marcado** — nunca preenchem nada.
+- Lesão valvar esquerda importante → lembra átrio esquerdo aumentado + hipertensão pulmonar.
+- FEVE < 40% → lembra cavidade do VE / disfunção diastólica / refluxo mitral secundário.
+- PSAP ≥ 50 → lembra refluxo tricúspide (só isso).
+- Hipertrofia importante → lembra disfunção diastólica (só isso).
+
+*Adiado de propósito (precisa a Dra. revisar o desenho):* ETE isolado como exame próprio e pesquisa de FOP com medidas.
+
+---
+
+## Versões anteriores
 
 **Novidades V5 (revisão dos laudos do Hospital Evangélico — chefe da Dra. Fernanda):**
 
