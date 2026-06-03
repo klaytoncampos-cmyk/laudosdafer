@@ -298,6 +298,19 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip" style="margin:0;flex:1;justify-content:flex-start"><input type="checkbox" id="pac-beira"><span>Exame beira-leito</span></label>
             </div>
           </div>
+          <div id="uti-context" style="display:none;border-top:1px dashed var(--border);margin-top:9px;padding-top:9px">
+            <span class="opt-label">Contexto do exame (beira-leito)</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="checkbox" id="uti-iotvm"><span>Sob IOT/VM</span></label>
+            </div>
+            <span class="opt-label" style="margin-top:7px">Drogas vasoativas (marque e informe a dose em ml/h)</span>
+            <div class="field-row cols-3">
+              <div class="fld"><label class="opt-chip" style="margin:0 0 4px;justify-content:flex-start"><input type="checkbox" id="uti-nora"><span>Noradrenalina</span></label><input id="uti-nora-dose" type="text" placeholder="ml/h"></div>
+              <div class="fld"><label class="opt-chip" style="margin:0 0 4px;justify-content:flex-start"><input type="checkbox" id="uti-dobu"><span>Dobutamina</span></label><input id="uti-dobu-dose" type="text" placeholder="ml/h"></div>
+              <div class="fld"><label class="opt-chip" style="margin:0 0 4px;justify-content:flex-start"><input type="checkbox" id="uti-vaso"><span>Vasopressina</span></label><input id="uti-vaso-dose" type="text" placeholder="ml/h"></div>
+            </div>
+            <div class="hint">Sai como: "Exame realizado beira-leito com paciente sob IOT/VM e em uso de noradrenalina X ml/h."</div>
+          </div>
         </div>
       </div>
 
@@ -398,6 +411,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip sel"><input type="radio" name="ve-septomorf" value="" checked><span>Não descrever</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com formato sigmoide."><span>Sigmoide</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com movimentação assincrônica (marcapasso)."><span>Assincrônico (MP)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento anômalo (assincrônico) do septo interventricular."><span>Mov. anômalo (assincrônico)</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular retificado (sobrecarga pressórica à direita)."><span>Retificado (sobrec. D)</span></label>
           </div>
           <div class="divider"></div>
@@ -498,6 +512,13 @@ body[data-density="compact"] .section{margin-bottom:8px}
           </div>
           <div class="opts-grid">
             <label class="opt-chip"><input type="checkbox" name="ve-pres-ench"><span>Há sinais de aumento das pressões de enchimento</span></label>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Contraste espontâneo (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip"><input type="radio" name="ve-contraste" value="" checked><span>Não</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-contraste" value="grau I"><span>Grau I</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-contraste" value="grau II"><span>Grau II</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-contraste" value="grau III"><span>Grau III</span></label>
           </div>
         </div>
       </div>
@@ -626,6 +647,12 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <div class="fld fld-suffix"><label>Vena contracta (opcional)</label><input id="vm-vena" type="number" step="0.1" placeholder="mm"><span class="suffix">mm</span></div>
               <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Sai como "(vena contracta= Xmm)"</div></div>
             </div>
+            <span class="opt-label">Causa do refluxo (opcional)</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="vm-refl-causa" value=""><span>Não especificar</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl-causa" value="secundário ao remodelamento atrial e ventricular"><span>Sec. remodelamento atrial/ventr.</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-refl-causa" value="secundário à dilatação do anel"><span>Sec. dilatação do anel</span></label>
+            </div>
             <span class="opt-label">Escore de Wilkins (opcional — estenose reumática)</span>
             <div class="field-row cols-4">
               <div class="fld"><label>Mobilidade</label><select id="vm-wilk-mob"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
@@ -730,6 +757,12 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo moderado"><span>Moderado</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo moderado a importante"><span>Mod. a imp.</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl" value="Refluxo importante"><span>Importante</span></label>
+            </div>
+            <span class="opt-label">Causa do refluxo (opcional)</span>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="radio" name="va-refl-causa" value=""><span>Não especificar</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl-causa" value="de etiologia degenerativa"><span>Etiologia degenerativa</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl-causa" value="secundário à dilatação da raiz da aorta"><span>Sec. dilatação da raiz</span></label>
             </div>
             <span class="opt-label">Estenose</span>
             <div class="opts-grid">
