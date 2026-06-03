@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/28480880/README.md)
+[README.md](https://github.com/user-attachments/files/28574219/README.md)
 # Laudos da Fer — Setup completo
 
 Gerador de laudos de ecocardiograma para Dra. Fernanda Andre Carbonieri (Santa Casa de Londrina).
@@ -183,6 +183,27 @@ Abre em `http://localhost:8788`.
 ---
 
 ## O que tem nessa versão
+
+**Novidades V7 (03/06/2026 — aprovadas pela Dra.):**
+
+*Causa/etiologia do refluxo (seletor opcional, como já havia na tricúspide):*
+- Mitral: "(secundário ao remodelamento atrial e ventricular)" e "(secundário à dilatação do anel)". Quando uma causa é escolhida, ela substitui o qualificador curto "(secundário)".
+- Aórtica: "(de etiologia degenerativa)" e "(secundário à dilatação da raiz da aorta)".
+
+*Ventrículo esquerdo:*
+- **Contraste espontâneo** (grau I/II/III) marcável no transtorácico — aparece no corpo do VE e na conclusão (antes só existia no ETE).
+- Septo interventricular: nova variante **"Movimento anômalo (assincrônico)"** (sem a palavra "marcapasso").
+
+*Contexto do exame na UTI (botões prontos):*
+- Ao marcar "Exame beira-leito", abre um bloco com **IOT/VM** e **drogas vasoativas** (noradrenalina, dobutamina, vasopressina), cada uma com campo de dose (ml/h).
+- Gera, por exemplo: "Exame realizado beira-leito com paciente sob IOT/VM e em uso de noradrenalina 8 ml/h e dobutamina 10 ml/h."
+
+*Conclusão:*
+- Quando o átrio esquerdo e o direito estão aumentados com o **mesmo grau**, a conclusão junta em "Aumento [grau] biatrial". Graus diferentes continuam separados.
+
+---
+
+## Versões anteriores
 
 **Novidades V6 (01/06/2026):**
 
