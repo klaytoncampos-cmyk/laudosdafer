@@ -216,6 +216,8 @@ document.addEventListener('change', e => {
   }
   if (e.target.id === 'pac-beira') {
     e.target.closest('.opt-chip').classList.toggle('sel', e.target.checked);
+    const uti = document.getElementById('uti-context');
+    if (uti) uti.style.display = e.target.checked ? 'block' : 'none';
     renderPreview();
     return;
   }
@@ -754,6 +756,26 @@ function genReport() {
   if (fc) R.ritmo += ` (FC: ${fc}bpm)`;
   R.janela = document.getElementById('pac-janela').value;
   R.beira = document.getElementById('pac-beira') && document.getElementById('pac-beira').checked;
+  if (R.beira) {
+    let frase = 'Exame realizado beira-leito';
+    const iotvm = document.getElementById('uti-iotvm')?.checked;
+    const drogas = [];
+    [['uti-nora','uti-nora-dose','noradrenalina'],['uti-dobu','uti-dobu-dose','dobutamina'],['uti-vaso','uti-vaso-dose','vasopressina']].forEach(([ck,ds,nome]) => {
+      if (document.getElementById(ck)?.checked) {
+        const dose = document.getElementById(ds)?.value.trim();
+        drogas.push(dose ? `${nome} ${dose} ml/h` : nome);
+      }
+    });
+    const partes = [];
+    if (iotvm) partes.push('sob IOT/VM');
+    if (drogas.length) {
+      const last = drogas.pop();
+      const lista = drogas.length ? drogas.join(', ') + ' e ' + last : last;
+      partes.push('em uso de ' + lista);
+    }
+    if (partes.length) frase += ' com paciente ' + partes.join(' e ');
+    R.beiraTxt = frase + '.';
+  }
 
   // AORTA TORÁCICA
   const raizClass = classifyAoRaiz(aoraiz);
@@ -893,6 +915,13 @@ function genReport() {
   if (presEnch) {
     veLines.push('Há sinais de aumento das pressões de enchimento.');
     altered.push('ve-pres-ench');
+  }
+
+  // Contraste espontâneo no VE
+  const veContraste = getRadio('ve-contraste');
+  if (veContraste) {
+    veLines.push(`Presença de contraste espontâneo ${veContraste}.`);
+    altered.push('ve-contraste');
   }
 
   R.sections.push({ lbl:'VENTRÍCULO ESQUERDO', txt:veLines.join(' ') });
@@ -1125,6 +1154,7 @@ function buildMitralSection(altered) {
     const refl = getRadio('vm-refl');
     const reflTipos = getChecks('vm-refl-tipo');
     const reflSec = document.getElementById('vm-refl-sec')?.checked;
+    const reflCausa = getRadio('vm-refl-causa');
     const vena = num('vm-vena');
     const wMob = document.getElementById('vm-wilk-mob')?.value;
     const wSub = document.getElementById('vm-wilk-sub')?.value;
@@ -1199,7 +1229,8 @@ function buildMitralSection(altered) {
     let dopplerLine;
     if (refl) {
       dopplerLine = `Ao Doppler exibe ${refl.toLowerCase()}`;
-      if (reflSec) dopplerLine += ' (secundário)';
+      if (reflCausa) dopplerLine += ` (${reflCausa})`;
+      else if (reflSec) dopplerLine += ' (secundário)';
       if (reflTipos.length) dopplerLine += ' ' + reflTipos.join(' e ');
       if (vena !== null) dopplerLine += ` (vena contracta= ${fmt(vena, 1)}mm)`;
     } else dopplerLine = 'Ao Doppler não exibe refluxo';
@@ -1307,6 +1338,8 @@ function buildAorticaSection(altered) {
     }
 
     let dopplerLine = refl ? `Ao Doppler exibe ${refl.toLowerCase()}` : 'Ao Doppler não exibe refluxo';
+    const vaReflCausa = getRadio('va-refl-causa');
+    if (refl && vaReflCausa) dopplerLine += ` (${vaReflCausa})`;
 
     const np = [];
     if (vmax) np.push(`Vmax= ${vmax}m/s`);
@@ -1365,13 +1398,16 @@ function genAutoConcl(altered) {
     lines.push(map[veDiast]);
   }
   if (Object.keys(state.bullseye).length > 0) lines.push('Alterações da motilidade segmentar (vide laudo)');
-  if (altered.includes('ae')) {
-    const grau = getRadio('ae-grau');
-    if (grau) lines.push(`${grau} do átrio esquerdo`);
-  }
-  if (altered.includes('ad')) {
-    const grau = getRadio('ad-grau');
-    if (grau) lines.push(`${grau} do átrio direito`);
+  const veContrasteC = getRadio('ve-contraste');
+  if (veContrasteC) lines.push(`Presença de contraste espontâneo ${veContrasteC}`);
+  const aeGrauC = altered.includes('ae') ? getRadio('ae-grau') : null;
+  const adGrauC = altered.includes('ad') ? getRadio('ad-grau') : null;
+  if (aeGrauC && adGrauC && aeGrauC === adGrauC) {
+    // mesmo grau nos dois átrios → frase biatrial
+    lines.push(`${aeGrauC} biatrial`);
+  } else {
+    if (aeGrauC) lines.push(`${aeGrauC} do átrio esquerdo`);
+    if (adGrauC) lines.push(`${adGrauC} do átrio direito`);
   }
 
   // Detecção de DUPLA LESÃO: estenose + refluxo na mesma valva
@@ -1487,7 +1523,7 @@ function renderPreview() {
   html += '<div class="p-section" style="margin-top:10px"><span class="p-label">DADOS DESCRITIVOS:</span></div>';
   html += `<div class="p-section"><span class="p-label">Ritmo:</span> <span class="p-text">${R.ritmo}</span></div>`;
   if (R.indic) html += `<div class="p-section"><span class="p-label">Indicação:</span> <span class="p-text">${R.indic}</span></div>`;
-  if (R.beira) html += `<div class="p-section"><span class="p-text">Exame realizado beira-leito.</span></div>`;
+  if (R.beira) html += `<div class="p-section"><span class="p-text">${R.beiraTxt || 'Exame realizado beira-leito.'}</span></div>`;
   if (R.janela) html += `<div class="p-section"><span class="p-text">${R.janela}</span></div>`;
   R.sections.forEach(s => {
     const frases = splitSentences(s.txt);
@@ -1585,7 +1621,7 @@ function buildPlainReport() {
   txt += 'DADOS DESCRITIVOS:\n';
   txt += `Ritmo: ${R.ritmo}\n`;
   if (R.indic) txt += `Indicação: ${R.indic}\n`;
-  if (R.beira) txt += 'Exame realizado beira-leito.\n';
+  if (R.beira) txt += (R.beiraTxt || 'Exame realizado beira-leito.') + '\n';
   if (R.janela) txt += `${R.janela}\n`;
   txt += '\n';
   R.sections.forEach(s => {
@@ -1652,7 +1688,8 @@ function resetAll() {
     'vm-prot-perival::','va-prot-perival::',
     'peri-loc::circunferencial','peri-rep::sem','vp-base::normal',
     'ete-veias::normal','ete-apend::normocontrátil','ete-trombos::ausencia','ete-veg::ausencia',
-    'vt-refl-causa::','vm-calc::','ve-septomorf::','septo-ia::'
+    'vt-refl-causa::','vm-calc::','ve-septomorf::','septo-ia::',
+    'vm-refl-causa::','va-refl-causa::','ve-contraste::'
   ];
   defaults.forEach(d => {
     const [name, val] = d.split('::');
@@ -1675,6 +1712,7 @@ function resetAll() {
   const vmVegRow = document.getElementById('vm-veg-row'); if (vmVegRow) vmVegRow.style.display = 'none';
   const vmCuspRow = document.getElementById('vm-cusp-row'); if (vmCuspRow) vmCuspRow.style.display = 'none';
   document.getElementById('segs-container').style.display = 'none';
+  const utiCtx = document.getElementById('uti-context'); if (utiCtx) utiCtx.style.display = 'none';
   document.getElementById('peri-extra').style.display = 'none';
   document.getElementById('vp-alt-body').style.display = 'none';
   state.mode = { aorta:'auto', ae:'auto', vci:'incluir' };
