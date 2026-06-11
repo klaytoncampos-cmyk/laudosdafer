@@ -89,9 +89,12 @@ function setTipo(t) {
   state.tipo = t;
   document.querySelectorAll('.tb-tab[data-tipo]').forEach(b => b.classList.toggle('active', b.dataset.tipo === t));
   document.querySelectorAll('.ete-only').forEach(el => el.style.display = t === 'ETE' ? 'block' : 'none');
+  document.querySelectorAll('.eteiso-only').forEach(el => el.style.display = t === 'ETE-ISO' ? 'block' : 'none');
   // mostrar/ocultar item ETE no nav
   const navEte = document.querySelector('.nav-section[data-target="ete"]');
   if (navEte) navEte.style.display = t === 'ETE' ? '' : 'none';
+  const navEteIso = document.querySelector('.nav-section[data-target="eteiso"]');
+  if (navEteIso) navEteIso.style.display = t === 'ETE-ISO' ? '' : 'none';
   renderPreview();
 }
 function setEteTipo(v) {
@@ -116,13 +119,14 @@ const SECTIONS_NAV = [
   { id:'septo', num:'12', label:'Septos' },
   { id:'vci', num:'13', label:'VCI' },
   { id:'ete', num:'E', label:'ETE', eteOnly:true },
+  { id:'eteiso', num:'TE', label:'ETE isolado', eteIsoOnly:true },
   { id:'concl', num:'★', label:'Conclusão' }
 ];
 
 function buildNavSidebar() {
   const pane = document.getElementById('nav-pane');
   pane.innerHTML = SECTIONS_NAV.map(s => `
-    <div class="nav-section normal" data-target="${s.id}" onclick="scrollToSec('${s.id}')" style="${s.eteOnly ? 'display:none' : ''}">
+    <div class="nav-section normal" data-target="${s.id}" onclick="scrollToSec('${s.id}')" style="${(s.eteOnly || s.eteIsoOnly) ? 'display:none' : ''}">
       <div class="nav-num">${s.num}</div>
       <div class="nav-label">${s.label}</div>
       <div class="nav-status">○</div>
@@ -220,6 +224,12 @@ document.addEventListener('change', e => {
     renderPreview();
     return;
   }
+  if (e.target.id === 'eteiso-trombo') {
+    document.getElementById('eteiso-trombo-row').style.display = e.target.checked ? 'block' : 'none';
+    e.target.closest('.opt-chip').classList.toggle('sel', e.target.checked);
+    renderPreview();
+    return;
+  }
   if (e.target.id === 'pac-beira') {
     e.target.closest('.opt-chip').classList.toggle('sel', e.target.checked);
     const uti = document.getElementById('uti-context');
@@ -232,7 +242,7 @@ document.addEventListener('change', e => {
   }
   if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
     const chip = e.target.closest('.opt-chip');
-    if (chip && !['vm-img-chk','vm-veg-chk','vm-cusp-chk','va-veg-chk','pac-beira'].includes(e.target.id)) {
+    if (chip && !['vm-img-chk','vm-veg-chk','vm-cusp-chk','va-veg-chk','eteiso-trombo','pac-beira'].includes(e.target.id)) {
       if (e.target.type === 'radio') {
         const name = e.target.name;
         if (name) document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.closest('.opt-chip')?.classList.remove('sel','auto'));
@@ -1560,9 +1570,164 @@ function genAutoConcl(altered) {
 }
 
 // ════════════════════════════════════════
+// ECOCARDIOGRAMA TRANSESOFÁGICO ISOLADO (ETE-ISO)
+// Reaproveita todas as computações clínicas do genReport() e
+// rearranja na estrutura do laudo de ETE da Dra. (CÂMARAS/FUNÇÃO/VALVAS).
+// ════════════════════════════════════════
+function assembleTEE() {
+  const R = genReport();
+  const getKw = kw => { const s = R.sections.find(x => x.lbl.includes(kw)); return s ? s.txt : ''; };
+  const lc = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+  // DADOS DESCRITIVOS
+  const descr = [];
+  descr.push('Exame realizado com paciente em decúbito lateral esquerdo, monitorizado, tendo sido o transdutor introduzido e retirado sem intercorrências.');
+  const anest = document.getElementById('eteiso-anest') ? document.getElementById('eteiso-anest').value : '';
+  if (anest) descr.push(anest);
+  const obj = document.getElementById('eteiso-obj') ? document.getElementById('eteiso-obj').value.trim() : '';
+  if (obj) descr.push('Objetivo do exame: ' + obj + (obj.endsWith('.') ? '' : '.'));
+  descr.push('Ritmo cardíaco: ' + R.ritmo + '.');
+
+  // CÂMARAS
+  const camaras = [];
+  const aevol = num('ae-vol');
+  if (state.mode.ae === 'alterado') {
+    const grau = getRadio('ae-grau') || 'Aumento';
+    camaras.push(`${grau} do átrio esquerdo.`);
+    camaras.push('Demais cavidades cardíacas com dimensões normais.');
+  } else {
+    camaras.push('Cavidades cardíacas com dimensões normais.');
+  }
+  if (aevol) camaras.push(`Volume indexado do átrio esquerdo: ${aevol}ml/m².`);
+
+  const apend = getRadio('eteiso-apend') || 'normocontrátil';
+  const contraste = getRadio('eteiso-contraste');
+  const trombo = document.getElementById('eteiso-trombo') && document.getElementById('eteiso-trombo').checked;
+  const tromboDesc = document.getElementById('eteiso-trombo-desc') ? document.getElementById('eteiso-trombo-desc').value.trim() : '';
+  let apLine = apend === 'normocontrátil' ? 'Apêndice atrial esquerdo normocontrátil' : `Apêndice atrial esquerdo ${apend}`;
+  apLine += '.';
+  const apExtra = [];
+  if (contraste) apExtra.push(`Apresenta ${contraste} contraste espontâneo em seu interior`);
+  if (trombo) {
+    const td = tromboDesc || 'imagem ecogênica, móvel, aderida à sua parede, sugestiva de trombo';
+    if (apExtra.length) apExtra[0] += ` e ${td}`;
+    else apExtra.push(`Apresenta ${td}`);
+  }
+  if (apExtra.length) apLine += ' ' + apExtra.join(' ') + '.';
+  camaras.push(apLine);
+
+  const sia = getRadio('eteiso-septo') || 'íntegro';
+  const siaMap = {
+    'íntegro':'Septo interatrial íntegro.',
+    'fop':'Septo interatrial com presença de fluxo esquerda-direita pelo forame oval, compatível com forame oval patente (FOP).',
+    'aneurismatico':'Septo interatrial aneurismático.',
+    'cia':'Comunicação interatrial com shunt ao Doppler colorido.'
+  };
+  camaras.push(siaMap[sia]);
+
+  // FUNÇÃO
+  const funcao = [];
+  const veEsp = getRadio('ve-esp') || 'preservada';
+  const espTEE = {
+    'preservada':'',
+    'remodelamento':'Remodelamento concêntrico do ventrículo esquerdo.',
+    'hve-concentrica-disc':'Hipertrofia concêntrica discreta do ventrículo esquerdo.',
+    'hve-concentrica-disc-mod':'Hipertrofia concêntrica discreta a moderada do ventrículo esquerdo.',
+    'hve-concentrica-mod':'Hipertrofia concêntrica moderada do ventrículo esquerdo.',
+    'hve-concentrica-mod-imp':'Hipertrofia concêntrica moderada a importante do ventrículo esquerdo.',
+    'hve-concentrica-imp':'Hipertrofia concêntrica importante do ventrículo esquerdo.',
+    'hve-excentrica':'Hipertrofia excêntrica do ventrículo esquerdo.',
+    'hve-descritiva':'Aumento moderado e simétrico da espessura miocárdica do ventrículo esquerdo.'
+  };
+  if (espTEE[veEsp]) funcao.push(espTEE[veEsp]);
+  const veSist = getRadio('ve-sist') || 'preservada';
+  const feve = num('ve-feve');
+  const sistTEE = {
+    'preservada':'Função sistólica ventricular preservada',
+    'disc-reduzida':'Disfunção sistólica discreta do ventrículo esquerdo',
+    'mod-reduzida':'Disfunção sistólica moderada do ventrículo esquerdo',
+    'imp-reduzida':'Disfunção sistólica importante do ventrículo esquerdo'
+  };
+  let sl = sistTEE[veSist];
+  if (feve !== null) sl += ` (FEVE= ${feve}%)`;
+  funcao.push(sl + '.');
+
+  // VALVAS (formato com bullets, como nos laudos de ETE)
+  const valvas = [];
+  valvas.push('- Mitral: ' + lc(getKw('MITRAL')));
+  valvas.push('- Aórtica: ' + lc(getKw('AÓRTICA')));
+  let triTxt = lc(getKw('TRICÚSPIDE'));
+  const psapStr = document.getElementById('vt-psap').value;
+  const vtVmax = num('vt-vmax');
+  if (psapStr) triTxt += vtVmax ? ` PSAP: ${psapStr}mmHg, veloc. máx.: ${fmt(vtVmax,1)}m/s.` : ` PSAP: ${psapStr}mmHg.`;
+  valvas.push('- Tricúspide: ' + triTxt);
+  const vpFull = getKw('PULMONAR');
+  const vpBase = vpFull.replace(/\s*(Ausência de sinais de hipertensão pulmonar|Sinais de hipertensão pulmonar|Não foi possível estimar a PSAP).*$/, '').trim();
+  valvas.push('- Pulmonar: ' + lc(vpBase));
+
+  // PERICÁRDIO / AORTA
+  const periTxt = getKw('PERICÁRDIO');
+  const peri = (periTxt === 'Ausência de derrame pericárdico.') ? 'Sem anormalidades.' : periTxt;
+  const aortaObs = document.getElementById('eteiso-aorta') ? document.getElementById('eteiso-aorta').value.trim() : '';
+  const aorta = aortaObs ? (aortaObs.endsWith('.') ? aortaObs : aortaObs + '.') : 'Sem particularidades.';
+
+  // CONCLUSÃO (reaproveita genAutoConcl e acrescenta trombo no apêndice)
+  let conclusao = R.conclusao;
+  if (trombo) {
+    const add = 'Trombo em apêndice atrial esquerdo';
+    if (conclusao && !/parâmetros da normalidade/.test(conclusao)) conclusao += (conclusao.endsWith('.') ? '' : '.') + ' ' + add + '.';
+    else conclusao = add + '.';
+  }
+
+  return { measures: R.measures, descr, camaras, funcao, valvas, peri, aorta, conclusao };
+}
+
+function renderTEEPreview() {
+  const A = assembleTEE();
+  let html = `<div class="p-title">ECOCARDIOGRAMA TRANSESOFÁGICO</div>`;
+  if (A.measures.length) {
+    html += '<div class="p-section"><span class="p-label">DADOS ESTRUTURAIS:</span></div>';
+    html += '<div class="p-measures">' + A.measures.map(m => `<div class="ml">${m}</div>`).join('') + '</div>';
+  }
+  const block = (lbl, arr) => {
+    let h = `<div class="p-section" style="margin-top:10px"><span class="p-label">${lbl}:</span></div>`;
+    h += arr.map(l => `<div class="p-section"><span class="p-text">${l}</span></div>`).join('');
+    return h;
+  };
+  html += block('DADOS DESCRITIVOS', A.descr);
+  html += block('CÂMARAS', A.camaras);
+  html += block('FUNÇÃO', A.funcao);
+  html += block('VALVAS', A.valvas);
+  html += `<div class="p-section" style="margin-top:8px"><span class="p-label">PERICÁRDIO:</span> <span class="p-text">${A.peri}</span></div>`;
+  html += `<div class="p-section"><span class="p-label">AORTA:</span> <span class="p-text">${A.aorta}</span></div>`;
+  if (A.conclusao) html += `<div class="p-concl"><span class="p-label">CONCLUSÃO:</span><br><span class="p-text">${A.conclusao}</span></div>`;
+  const recom = document.getElementById('recom').value.trim();
+  if (recom) html += `<div class="p-section" style="margin-top:8px"><span class="p-label">Recomendações:</span> <span class="p-text">${recom}</span></div>`;
+  document.getElementById('preview-body').innerHTML = html;
+  document.getElementById('preview-meta').textContent = `atualizado · ${new Date().toLocaleTimeString('pt-BR').slice(0,5)}`;
+}
+
+function buildTEEPlain() {
+  const A = assembleTEE();
+  let txt = 'ECOCARDIOGRAMA TRANSESOFÁGICO\n\n';
+  if (A.measures.length) txt += 'DADOS ESTRUTURAIS\n' + A.measures.join('\n') + '\n\n';
+  txt += 'DADOS DESCRITIVOS:\n' + A.descr.join('\n') + '\n\n';
+  txt += 'CÂMARAS:\n' + A.camaras.join('\n') + '\n\n';
+  txt += 'FUNÇÃO:\n' + A.funcao.join('\n') + '\n\n';
+  txt += 'VALVAS:\n' + A.valvas.join('\n') + '\n\n';
+  txt += 'PERICÁRDIO: ' + A.peri + '\n';
+  txt += 'AORTA: ' + A.aorta + '\n';
+  if (A.conclusao) txt += '\nCONCLUSÃO:\n' + A.conclusao + '\n';
+  const recom = document.getElementById('recom').value.trim();
+  if (recom) txt += '\nRecomendações: ' + recom + '\n';
+  return txt;
+}
+
+// ════════════════════════════════════════
 // PREVIEW
 // ════════════════════════════════════════
 function renderPreview() {
+  if (state.tipo === 'ETE-ISO') { renderTEEPreview(); return; }
   const R = genReport();
   const body = document.getElementById('preview-body');
   // Título dinâmico ETT / ETE
@@ -1666,6 +1831,7 @@ function updateStickyHeader() {
 // COPY
 // ════════════════════════════════════════
 function buildPlainReport() {
+  if (state.tipo === 'ETE-ISO') return buildTEEPlain();
   const R = genReport();
   let titulo = 'ECOCARDIOGRAMA TRANSTORÁCICO COM DOPPLER COLORIDO';
   if (state.tipo === 'ETE') {
@@ -1745,6 +1911,7 @@ function resetAll() {
     'vm-prot-perival::','va-prot-perival::',
     'peri-loc::circunferencial','peri-rep::sem','vp-base::normal',
     'ete-veias::normal','ete-apend::normocontrátil','ete-trombos::nao-descrever','ete-veg::nao-descrever',
+    'eteiso-apend::normocontrátil','eteiso-contraste::','eteiso-septo::íntegro',
     'vt-refl-causa::','vm-calc::','ve-septomorf::','septo-ia::',
     'vm-refl-causa::','va-refl-causa::','ve-contraste::','vp-psap-obs::'
   ];
@@ -1771,6 +1938,8 @@ function resetAll() {
   const vmVegRow = document.getElementById('vm-veg-row'); if (vmVegRow) vmVegRow.style.display = 'none';
   const vmCuspRow = document.getElementById('vm-cusp-row'); if (vmCuspRow) vmCuspRow.style.display = 'none';
   const vaVegRow = document.getElementById('va-veg-row'); if (vaVegRow) vaVegRow.style.display = 'none';
+  const eteisoTromboRow = document.getElementById('eteiso-trombo-row'); if (eteisoTromboRow) eteisoTromboRow.style.display = 'none';
+  const eteisoAnest = document.getElementById('eteiso-anest'); if (eteisoAnest) eteisoAnest.value = 'Anestesia tópica da orofaringe com lidocaína spray e sedação com propofol.';
   document.getElementById('segs-container').style.display = 'none';
   const utiCtx = document.getElementById('uti-context'); if (utiCtx) utiCtx.style.display = 'none';
   document.getElementById('peri-extra').style.display = 'none';
