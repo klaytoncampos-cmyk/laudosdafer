@@ -214,6 +214,12 @@ document.addEventListener('change', e => {
     renderPreview();
     return;
   }
+  if (e.target.id === 'va-veg-chk') {
+    document.getElementById('va-veg-row').style.display = e.target.checked ? 'block' : 'none';
+    e.target.closest('.opt-chip').classList.toggle('sel', e.target.checked);
+    renderPreview();
+    return;
+  }
   if (e.target.id === 'pac-beira') {
     e.target.closest('.opt-chip').classList.toggle('sel', e.target.checked);
     const uti = document.getElementById('uti-context');
@@ -226,7 +232,7 @@ document.addEventListener('change', e => {
   }
   if (e.target.matches('input[type="radio"], input[type="checkbox"]')) {
     const chip = e.target.closest('.opt-chip');
-    if (chip && !['vm-img-chk','vm-veg-chk','vm-cusp-chk','pac-beira'].includes(e.target.id)) {
+    if (chip && !['vm-img-chk','vm-veg-chk','vm-cusp-chk','va-veg-chk','pac-beira'].includes(e.target.id)) {
       if (e.target.type === 'radio') {
         const name = e.target.name;
         if (name) document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.closest('.opt-chip')?.classList.remove('sel','auto'));
@@ -901,20 +907,23 @@ function genReport() {
     'grau-3':'Disfunção diastólica grau III.',
     'indet':'Função diastólica indeterminada.',
     'na-mp':'Padrão diastólico não avaliado devido ao marcapasso.',
-    'na-valv':'Padrão diastólico não avaliado devido à valvopatia mitral.'
+    'na-valv':'Padrão diastólico não avaliado devido à valvopatia mitral.',
+    'na-arr':'Padrão diastólico não avaliado devido arritmia.'
   };
   let diastLine = diastMap[veDiast];
-  if (veEe !== null && veDiast !== 'na-mp' && veDiast !== 'na-valv') {
+  if (veEe !== null && veDiast !== 'na-mp' && veDiast !== 'na-valv' && veDiast !== 'na-arr') {
     diastLine = diastLine.replace('.', ` (E/e' médio= ${fmt(veEe, 1)}).`);
   }
   veLines.push(diastLine);
   if (veDiast !== 'normal') altered.push('ve-diast');
 
   // Pressões de enchimento
-  const presEnch = document.querySelector('input[name="ve-pres-ench"]:checked');
-  if (presEnch) {
+  const presEnch = getRadio('ve-pres-ench');
+  if (presEnch === 'aumento') {
     veLines.push('Há sinais de aumento das pressões de enchimento.');
     altered.push('ve-pres-ench');
+  } else if (presEnch === 'ausencia') {
+    veLines.push('Ausência de sinais de aumento das pressões de enchimento.');
   }
 
   // Contraste espontâneo no VE
@@ -964,9 +973,13 @@ function genReport() {
   if (state.mode.vt === 'alterado') {
     const refl = getRadio('vt-refl');
     const causa = getRadio('vt-refl-causa');
+    const coapt = document.getElementById('vt-coapt')?.checked;
     let reflTxt = (refl || 'refluxo').toLowerCase();
     if (causa) reflTxt += ` (${causa})`;
-    R.sections.push({ lbl:'VALVA TRICÚSPIDE', txt:`Cúspides finas, abertura e mobilidade preservadas. Ao Doppler exibe ${reflTxt}, sem gradiente transvalvar significativo.` });
+    const morfPrefix = coapt
+      ? 'Cúspides finas, com falha de coaptação.'
+      : 'Cúspides finas, abertura e mobilidade preservadas.';
+    R.sections.push({ lbl:'VALVA TRICÚSPIDE', txt:`${morfPrefix} Ao Doppler exibe ${reflTxt}, sem gradiente transvalvar significativo.` });
     if (refl && refl !== 'Refluxo mínimo') altered.push('vt');
   } else R.sections.push({ lbl:'VALVA TRICÚSPIDE', txt:'Cúspides finas, abertura e mobilidade preservadas. Ao Doppler não exibe refluxo, sem gradiente transvalvar significativo.' });
 
@@ -976,6 +989,7 @@ function genReport() {
   const vtVmax = num('vt-vmax');
   const psapStr = document.getElementById('vt-psap').value;
   const psapNum = parseFloat((psapStr || '0').replace(',', '.'));
+  const psapObs = getRadio('vp-psap-obs');
 
   let vpBaseTxt;
   if (vpBase === 'normal') vpBaseTxt = 'Sem anormalidades morfofuncionais. Fluxo transvalvar fisiológico';
@@ -984,9 +998,15 @@ function genReport() {
     altered.push('vp');
   }
   let psapLine;
-  if (psapStr && vtVmax) {
+  if (psapObs === 'nao-estimavel') {
+    psapLine = 'Ausência de sinais de hipertensão pulmonar - não foi possível estimar a PSAP.';
+  } else if (psapObs === 'nao-estimavel-coapt') {
+    psapLine = 'Não foi possível estimar a PSAP devido falha de coaptação das cúspides com rápida equalização das pressões.';
+  } else if (psapStr && vtVmax) {
     const prefix = psapNum < 35 ? 'Ausência de sinais de hipertensão pulmonar' : 'Sinais de hipertensão pulmonar';
-    psapLine = `${prefix} (PSAP= ${psapStr}mmHg, estimada pelo refluxo tricuspídeo - velocidade máxima do refluxo= ${fmt(vtVmax,1)}m/seg).`;
+    psapLine = `${prefix} (PSAP= ${psapStr}mmHg`;
+    if (psapObs === 'subestimado') psapLine += ', pode estar subestimado devido insuficiência tricúspide importante';
+    psapLine += `, estimada pelo refluxo tricuspídeo - velocidade máxima do refluxo= ${fmt(vtVmax,1)}m/seg).`;
     if (psapNum >= 35) altered.push('psap');
   } else if (psapStr) {
     psapLine = psapNum < 35 ? `Ausência de sinais de hipertensão pulmonar (PSAP= ${psapStr}mmHg).` : `Sinais de hipertensão pulmonar (PSAP= ${psapStr}mmHg).`;
@@ -1019,7 +1039,7 @@ function genReport() {
   const sep = getRadio('septo') || 'normal';
   const sepMap = {
     'normal':'Não foi visualizado shunt ao Doppler colorido.',
-    'fop':'Sinais sugestivos de forame oval patente / pequena CIA do tipo ostium secundum.',
+    'fop':'Presença de fluxo esquerda-direita pelo forame oval, compatível com forame oval patente (FOP).',
     'fop-pos-ablacao':'Presença de shunt interatrial esquerda direita na lâmina da fossa oval compatível com status pós procedimento (ablação de fibrilação atrial prévia).',
     'cia':'Comunicação interatrial com shunt ao Doppler colorido.',
     'civ':'Comunicação interventricular ao Doppler colorido.'
@@ -1084,8 +1104,8 @@ function genReport() {
   if (state.tipo === 'ETE') {
     const veias = getRadio('ete-veias') || 'normal';
     const apend = getRadio('ete-apend') || 'normocontrátil';
-    const trombos = getRadio('ete-trombos') || 'ausencia';
-    const veg = getRadio('ete-veg') || 'ausencia';
+    const trombos = getRadio('ete-trombos') || 'nao-descrever';
+    const veg = getRadio('ete-veg') || 'nao-descrever';
     const eteObs = document.getElementById('ete-obs').value.trim();
 
     const veiasMap = {
@@ -1095,10 +1115,12 @@ function genReport() {
     };
     R.eteLines = [
       veiasMap[veias],
-      `Apêndice atrial esquerdo ${apend}.`,
-      trombos === 'ausencia' ? 'Ausência de imagens sugestivas de trombos.' : 'Presença de imagens sugestivas de trombos.',
-      veg === 'ausencia' ? 'Ausência de imagens sugestivas de vegetação.' : 'Presença de imagens sugestivas de vegetação.'
+      `Apêndice atrial esquerdo ${apend}.`
     ];
+    if (trombos === 'ausencia') R.eteLines.push('Ausência de imagens sugestivas de trombos.');
+    else if (trombos === 'presenca') R.eteLines.push('Presença de imagens sugestivas de trombos.');
+    if (veg === 'ausencia') R.eteLines.push('Ausência de imagens sugestivas de vegetação.');
+    else if (veg === 'presenca') R.eteLines.push('Presença de imagens sugestivas de vegetação.');
     if (eteObs) R.eteLines.push(eteObs);
     if (trombos === 'presenca') altered.push('ete:trombo');
     if (veg === 'presenca') altered.push('ete:veg');
@@ -1127,18 +1149,24 @@ function buildMitralSection(altered) {
     const gradMax = num('vm-prot-grad-max');
     const grad = num('vm-prot-grad');
     const area = num('vm-prot-area');
-    let parts = [tipo, func === 'disfuncionante' ? 'com sinais de disfunção' : 'normofuncionante'];
-    if (perival) parts.push(perival.toLowerCase());
-    if (adds.length) parts.push(adds.join(', ').toLowerCase());
+    const areaMet = document.getElementById('vm-prot-area-met')?.value ?? '';
+    const folheto = /mecânica/i.test(tipo) ? 'Discos com abertura e mobilidade preservados' : 'Folhetos finos, abertura e mobilidade preservados';
+    let frases = [folheto];
+    if (func === 'disfuncionante') frases.push('com sinais de disfunção');
+    if (perival) frases.push(perival.toLowerCase());
+    if (adds.length) frases.push(adds.join(', ').toLowerCase());
+    let doppler = perival ? '' : 'Ao Doppler não exibe refluxo';
     const np = [];
-    if (gradMax !== null && grad !== null) np.push(`gradiente máximo= ${gradMax}mmHg e médio= ${grad}mmHg`);
-    else if (gradMax !== null) np.push(`gradiente máximo= ${gradMax}mmHg`);
-    else if (grad !== null) np.push(`gradiente médio= ${grad}mmHg`);
-    if (area) np.push(`área valvar efetiva= ${area}cm²`);
-    let t = parts.join(', ').replace(/^./, c => c.toUpperCase()) + '.';
-    if (np.length) t += ` ${np.join('; ')}.`;
+    if (gradMax !== null && grad !== null) np.push(`Gradiente máximo= ${gradMax}mmHg e médio= ${grad}mmHg`);
+    else if (gradMax !== null) np.push(`Gradiente máximo= ${gradMax}mmHg`);
+    else if (grad !== null) np.push(`Gradiente médio= ${grad}mmHg`);
+    if (area) np.push(areaMet ? `Área valvar (${areaMet})= ${area}cm²` : `Área valvar efetiva= ${area}cm²`);
+    let t = frases.join(', ').replace(/^./, c => c.toUpperCase()) + '.';
+    if (doppler) t += ` ${doppler}.`;
+    if (np.length) t += ` ${np.join('. ')}.`;
     altered.push('vm-prot');
-    return { lbl:'VALVA MITRAL', txt:t };
+    const lbl = /mecânica/i.test(tipo) ? 'PRÓTESE METÁLICA EM POSIÇÃO MITRAL' : 'PRÓTESE BIOLÓGICA EM POSIÇÃO MITRAL';
+    return { lbl, txt:t };
   }
   if (m === 'alterado') {
     const morf = getChecks('vm-morf');
@@ -1287,18 +1315,28 @@ function buildAorticaSection(altered) {
     const gradMax = num('va-prot-grad-max');
     const grad = num('va-prot-grad');
     const area = num('va-prot-area');
-    let parts = [tipo, func === 'disfuncionante' ? 'com sinais de disfunção' : 'normofuncionante'];
-    if (perival) parts.push(perival.toLowerCase());
+    const isMec = /mecânica/i.test(tipo);
+    const isTavi = /TAVI/i.test(tipo);
+    const folheto = isMec ? 'Discos com abertura e mobilidade preservados' : 'Folhetos finos, abertura e mobilidade preservados';
+    let frases = [folheto];
+    if (func === 'disfuncionante') frases.push('com sinais de disfunção');
+    if (perival) frases.push(perival.toLowerCase());
+    let doppler = perival ? '' : 'Ao Doppler não exibe refluxo';
     const np = [];
     if (vmax) np.push(`Vmax= ${vmax}m/s`);
-    if (gradMax !== null && grad !== null) np.push(`gradiente máximo= ${gradMax}mmHg e médio= ${grad}mmHg`);
-    else if (gradMax !== null) np.push(`gradiente máximo= ${gradMax}mmHg`);
-    else if (grad !== null) np.push(`gradiente médio= ${grad}mmHg`);
+    if (gradMax !== null && grad !== null) np.push(`Gradiente sistólico VE-Ao máximo= ${gradMax}mmHg e médio= ${grad}mmHg`);
+    else if (gradMax !== null) np.push(`Gradiente sistólico VE-Ao máximo= ${gradMax}mmHg`);
+    else if (grad !== null) np.push(`Gradiente sistólico VE-Ao médio= ${grad}mmHg`);
     if (area) np.push(`área valvar efetiva= ${area}cm²`);
-    let t = parts.join(', ').replace(/^./, c => c.toUpperCase()) + '.';
+    let t = frases.join(', ').replace(/^./, c => c.toUpperCase()) + '.';
+    if (doppler) t += ` ${doppler}.`;
     if (np.length) t += ` ${np.join('; ')}.`;
     altered.push('va-prot');
-    return { lbl:'VALVA AÓRTICA', txt:t };
+    let lbl;
+    if (isTavi) lbl = 'PRÓTESE TRANSCATETER (TAVI) EM POSIÇÃO AÓRTICA';
+    else if (isMec) lbl = 'PRÓTESE METÁLICA EM POSIÇÃO AÓRTICA';
+    else lbl = 'PRÓTESE BIOLÓGICA EM POSIÇÃO AÓRTICA';
+    return { lbl, txt:t };
   }
   if (m === 'alterado') {
     const morf = getChecks('va-morf');
@@ -1308,8 +1346,14 @@ function buildAorticaSection(altered) {
     const gradMax = num('va-grad-max');
     const grad = num('va-grad');
     const area = num('va-area');
+    const reflPht = num('va-refl-pht');
     const gradTipo = document.getElementById('va-grad-tipo')?.value ?? 'sistólico';
     const areaMet = document.getElementById('va-area-met')?.value ?? 'Equação de Continuidade';
+    const vegChecked = document.getElementById('va-veg-chk')?.checked;
+    const vegCusp = document.getElementById('va-veg-cusp')?.value;
+    const vegSize = document.getElementById('va-veg-size')?.value.trim();
+    const vegNeg = document.getElementById('va-veg-neg')?.checked;
+    const hasProlapso = morf.includes('com prolapso de uma das válvulas');
 
     let base = vaAnat === 'bicuspide' ? 'Valva aórtica bicúspide' : 'Trivalvular';
     let cuspideDesc = 'com válvulas finas';
@@ -1324,6 +1368,7 @@ function buildAorticaSection(altered) {
       else if (m === 'calcificação nas bordas livres') modif.push('com calcificação nas bordas livres');
       else if (m === 'abertura em domo') aoDomo = true;
       else if (m === 'extensa calcificação degenerativa') aoCalcExtensa = true;
+      else if (m === 'com prolapso de uma das válvulas') { /* tratado à parte */ }
       else if (m === 'janela limitada') modif.push('não foi possível avaliar sua morfologia devido janela acústica limitada');
       else modif.push(m);
     });
@@ -1336,10 +1381,20 @@ function buildAorticaSection(altered) {
       const fechoAbertura = aoDomo ? 'abertura em domo' : 'abertura e mobilidade preservadas';
       morfLine = `${base} ${cuspideDesc}` + (modif.length ? ', ' + modif.join(', ') : '') + ', ' + fechoAbertura;
     }
+    if (hasProlapso) morfLine += '. Há prolapso de uma de suas válvulas';
+
+    // Vegetação estruturada (cúspide + dimensão + negativas)
+    if (vegChecked) {
+      const sizeTxt = vegSize ? `, de ${vegSize}` : '';
+      const cuspTxt = vegCusp || 'a válvula';
+      morfLine += `. Apresenta imagem arredondada, móvel, de aspecto algodonoso aderida à ${cuspTxt}${sizeTxt}, sugestivo de vegetação`;
+      if (vegNeg) morfLine += '. Ausência de imagem sugestiva de fístula, perfuração ou abscesso';
+    }
 
     let dopplerLine = refl ? `Ao Doppler exibe ${refl.toLowerCase()}` : 'Ao Doppler não exibe refluxo';
     const vaReflCausa = getRadio('va-refl-causa');
     if (refl && vaReflCausa) dopplerLine += ` (${vaReflCausa})`;
+    if (refl && reflPht !== null) dopplerLine += ` (PHT: ${reflPht}ms)`;
 
     const np = [];
     if (vmax) np.push(`Vmax= ${vmax}m/s`);
@@ -1393,7 +1448,7 @@ function genAutoConcl(altered) {
     const feve = num('ve-feve');
     lines.push(map[veSist] + (feve ? ` (FEVE= ${feve}%)` : ''));
   }
-  if (veDiast && veDiast !== 'normal' && veDiast !== 'indet' && veDiast !== 'na-mp' && veDiast !== 'na-valv') {
+  if (veDiast && veDiast !== 'normal' && veDiast !== 'indet' && veDiast !== 'na-mp' && veDiast !== 'na-valv' && veDiast !== 'na-arr') {
     const map = { 'grau-1':'Disfunção diastólica grau I', 'grau-2':'Disfunção diastólica grau II', 'grau-3':'Disfunção diastólica grau III' };
     lines.push(map[veDiast]);
   }
@@ -1440,7 +1495,8 @@ function genAutoConcl(altered) {
 
   if (altered.includes('vm-prot')) {
     const tipo = getRadio('vm-prot-tipo');
-    if (tipo) lines.push(tipo);
+    const func = getRadio('vm-prot-func');
+    if (tipo) lines.push(func === 'disfuncionante' ? `${tipo} com sinais de disfunção` : `${tipo} normofuncionante`);
   }
 
   if (vaDupla) {
@@ -1456,7 +1512,8 @@ function genAutoConcl(altered) {
 
   if (altered.includes('va-prot')) {
     const tipo = getRadio('va-prot-tipo');
-    if (tipo) lines.push(tipo);
+    const func = getRadio('va-prot-func');
+    if (tipo) lines.push(func === 'disfuncionante' ? `${tipo} com sinais de disfunção` : `${tipo} normofuncionante`);
   }
   if (altered.includes('va-bic')) lines.push('Valva aórtica bicúspide');
   if (altered.includes('vt')) {
@@ -1476,7 +1533,7 @@ function genAutoConcl(altered) {
   if (altered.some(a => a.startsWith('septo:'))) {
     const s = altered.find(a => a.startsWith('septo:')).split(':')[1];
     const map = {
-      'fop':'Forame oval patente / CIA OS',
+      'fop':'Forame oval patente (FOP)',
       'fop-pos-ablacao':'Shunt interatrial na lâmina da fossa oval, compatível com status pós-procedimento (ablação de fibrilação atrial prévia)',
       'cia':'CIA com shunt',
       'civ':'CIV',
@@ -1687,9 +1744,9 @@ function resetAll() {
     'vm-prot-func::normofuncionante','va-prot-func::normofuncionante',
     'vm-prot-perival::','va-prot-perival::',
     'peri-loc::circunferencial','peri-rep::sem','vp-base::normal',
-    'ete-veias::normal','ete-apend::normocontrátil','ete-trombos::ausencia','ete-veg::ausencia',
+    'ete-veias::normal','ete-apend::normocontrátil','ete-trombos::nao-descrever','ete-veg::nao-descrever',
     'vt-refl-causa::','vm-calc::','ve-septomorf::','septo-ia::',
-    'vm-refl-causa::','va-refl-causa::','ve-contraste::'
+    'vm-refl-causa::','va-refl-causa::','ve-contraste::','vp-psap-obs::'
   ];
   defaults.forEach(d => {
     const [name, val] = d.split('::');
@@ -1704,13 +1761,16 @@ function resetAll() {
   // selects novos com defaults
   const vmGradTipo = document.getElementById('vm-grad-tipo'); if (vmGradTipo) vmGradTipo.value = 'AE-VE';
   const vmAreaMet = document.getElementById('vm-area-met'); if (vmAreaMet) vmAreaMet.value = 'PHT';
+  const vmProtAreaMet = document.getElementById('vm-prot-area-met'); if (vmProtAreaMet) vmProtAreaMet.value = 'método de continuidade';
   const vaGradTipo = document.getElementById('va-grad-tipo'); if (vaGradTipo) vaGradTipo.value = 'sistólico';
   const vaAreaMet = document.getElementById('va-area-met'); if (vaAreaMet) vaAreaMet.value = 'Equação de Continuidade';
   const aoTermoSel = document.getElementById('aorta-termo'); if (aoTermoSel) aoTermoSel.value = 'Dilatação';
+  const vaVegCusp = document.getElementById('va-veg-cusp'); if (vaVegCusp) vaVegCusp.value = 'válvula não coronariana';
   ['vm-wilk-mob','vm-wilk-sub','vm-wilk-fol','vm-wilk-calc'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
   document.getElementById('vm-img-row').style.display = 'none';
   const vmVegRow = document.getElementById('vm-veg-row'); if (vmVegRow) vmVegRow.style.display = 'none';
   const vmCuspRow = document.getElementById('vm-cusp-row'); if (vmCuspRow) vmCuspRow.style.display = 'none';
+  const vaVegRow = document.getElementById('va-veg-row'); if (vaVegRow) vaVegRow.style.display = 'none';
   document.getElementById('segs-container').style.display = 'none';
   const utiCtx = document.getElementById('uti-context'); if (utiCtx) utiCtx.style.display = 'none';
   document.getElementById('peri-extra').style.display = 'none';
