@@ -240,6 +240,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
     <div class="tb-tabs">
       <button class="tb-tab active" data-tipo="ETT" onclick="setTipo('ETT')">ETT</button>
       <button class="tb-tab" data-tipo="ETE" onclick="setTipo('ETE')">ETT + ETE</button>
+      <button class="tb-tab" data-tipo="ETE-ISO" onclick="setTipo('ETE-ISO')">ETE isolado</button>
     </div>
     <div class="tb-actions">
       <button class="tb-btn primary" onclick="aplicarTudoNormal()">✓ Tudo normal</button>
@@ -1055,6 +1056,53 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip"><input type="radio" name="ete-veg" value="presenca"><span>Presença (descrever)</span></label>
           </div>
           <div class="fld" style="margin-top:9px"><label>Observação adicional ETE (opcional)</label><textarea id="ete-obs" rows="2" placeholder="Detalhes adicionais do ETE..."></textarea></div>
+        </div>
+      </div>
+
+      <div class="section eteiso-only" data-id="eteiso" id="sec-eteiso" style="display:none">
+        <div class="sec-head"><div class="sec-num">TE</div><div class="sec-title">ETE isolado — específico</div></div>
+        <div class="sec-body">
+          <div class="hint" style="margin-bottom:9px">Modo ETE isolado: o laudo sai como <b>ECOCARDIOGRAMA TRANSESOFÁGICO</b>, com CÂMARAS / FUNÇÃO / VALVAS. As valvas, o AE e a função do VE são puxados das seções normais acima.</div>
+          <div class="fld"><label>Objetivo do exame</label><input id="eteiso-obj" placeholder="Ex: avaliação de trombo para ablação"></div>
+          <div class="fld" style="margin-top:9px"><label>Anestesia / sedação</label>
+            <select id="eteiso-anest">
+              <option value="Anestesia tópica da orofaringe com lidocaína spray e sedação com propofol.">Lidocaína spray + propofol (padrão)</option>
+              <option value="Anestesia tópica da orofaringe com lidocaína spray.">Só lidocaína spray</option>
+              <option value="Exame realizado sob anestesia geral.">Anestesia geral</option>
+              <option value="">Não descrever</option>
+            </select>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Apêndice atrial esquerdo</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="eteiso-apend" value="normocontrátil" checked><span>Normocontrátil</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-apend" value="com contratilidade reduzida"><span>Contratilidade reduzida</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-apend" value="com contratilidade reduzida e irregular"><span>Reduzida e irregular</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-apend" value="acontrátil"><span>Acontrátil</span></label>
+          </div>
+          <span class="opt-label">Contraste espontâneo no apêndice/AE</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="eteiso-contraste" value="" checked><span>Não</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-contraste" value="discreto"><span>Discreto</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-contraste" value="grau I"><span>Grau I</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-contraste" value="grau II"><span>Grau II</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-contraste" value="grau III"><span>Grau III</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-contraste" value="intenso"><span>Intenso</span></label>
+          </div>
+          <span class="opt-label">Trombo no apêndice (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip" id="eteiso-trombo-chip"><input type="checkbox" id="eteiso-trombo"><span>Imagem sugestiva de trombo</span></label>
+          </div>
+          <div id="eteiso-trombo-row" style="display:none">
+            <div class="fld"><label>Descrição do trombo (dimensões + local)</label><input id="eteiso-trombo-desc" type="text" placeholder="imagem ecogênica, móvel, de 0,6x1,2cm, aderida ao ápice, sugestiva de trombo"></div>
+          </div>
+          <span class="opt-label" style="margin-top:10px">Septo interatrial</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="eteiso-septo" value="íntegro" checked><span>Íntegro</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-septo" value="fop"><span>FOP</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-septo" value="aneurismatico"><span>Aneurismático</span></label>
+            <label class="opt-chip"><input type="radio" name="eteiso-septo" value="cia"><span>CIA com shunt</span></label>
+          </div>
+          <div class="fld" style="margin-top:10px"><label>Aorta (TEE) — observação</label><input id="eteiso-aorta" placeholder="Sem particularidades (padrão se vazio)"></div>
         </div>
       </div>
 
