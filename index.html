@@ -286,7 +286,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="fld"><label>Sexo</label><select id="pac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
           </div>
           <div class="field-row cols-4">
-            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Sinusal com arritmias paroxísticas durante o exame</option><option>Regular com extrassístoles frequentes</option><option>Regular, taquicárdico</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
+            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Sinusal com arritmias paroxísticas durante o exame</option><option>Regular com extrassístoles frequentes</option><option>Regular, taquicárdico</option><option>Regular com marcapasso</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
             <div class="fld fld-suffix"><label>FC (opcional)</label><input id="pac-fc" type="number" placeholder="bpm"><span class="suffix">bpm</span></div>
             <div class="fld fld-suffix"><label>Peso</label><input id="pac-peso" type="number" step="0.1" placeholder="kg"><span class="suffix">kg</span></div>
             <div class="fld fld-suffix"><label>Altura</label><input id="pac-alt" type="number" placeholder="cm"><span class="suffix">cm</span></div>
@@ -406,12 +406,14 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip"><input type="radio" name="ve-esp" value="hve-descritiva"><span>Aumento simétrico (descritivo)</span></label>
           </div>
           <div class="hint">Auto a partir de massa indexada + ERP (item 1)</div>
-          <span class="opt-label" style="margin-top:10px">Morfologia do septo interventricular (opcional)</span>
+          <span class="opt-label" style="margin-top:10px">Morfologia / movimento do septo interventricular (opcional)</span>
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="ve-septomorf" value="" checked><span>Não descrever</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com formato sigmoide."><span>Sigmoide</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular com movimentação assincrônica (marcapasso)."><span>Assincrônico (MP)</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento anômalo (assincrônico) do septo interventricular."><span>Mov. anômalo (assincrônico)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento paradoxal do septo interventricular."><span>Mov. paradoxal</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento paradoxal (retificação) do septo interventricular."><span>Mov. paradoxal (retificação)</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular retificado (sobrecarga pressórica à direita)."><span>Retificado (sobrec. D)</span></label>
           </div>
           <div class="divider"></div>
@@ -505,13 +507,17 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip"><input type="radio" name="ve-diast" value="indet"><span>Indeterminada</span></label>
             <label class="opt-chip"><input type="radio" name="ve-diast" value="na-mp"><span>Não avaliada (marcapasso)</span></label>
             <label class="opt-chip"><input type="radio" name="ve-diast" value="na-valv"><span>Não avaliada (valvopatia)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-diast" value="na-arr"><span>Não avaliada (arritmia)</span></label>
           </div>
           <div class="field-row cols-2">
             <div class="fld fld-suffix"><label>E/e' (médio)</label><input id="ve-ee" type="number" step="0.1" placeholder="—"><span class="suffix"></span></div>
             <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Aparece no laudo se preenchido</div></div>
           </div>
+          <span class="opt-label" style="margin-top:10px">Pressões de enchimento (opcional)</span>
           <div class="opts-grid">
-            <label class="opt-chip"><input type="checkbox" name="ve-pres-ench"><span>Há sinais de aumento das pressões de enchimento</span></label>
+            <label class="opt-chip sel"><input type="radio" name="ve-pres-ench" value="" checked><span>Não descrever</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-pres-ench" value="aumento"><span>Há sinais de aumento</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-pres-ench" value="ausencia"><span>Ausência de sinais</span></label>
           </div>
           <span class="opt-label" style="margin-top:10px">Contraste espontâneo (opcional)</span>
           <div class="opts-grid">
@@ -565,6 +571,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
           <div class="opts-grid">
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Fios de marcapasso em cavidades direitas."><span>Fios de marcapasso</span></label>
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Eletrodos de marcapasso em cavidades direitas."><span>Eletrodos de MP</span></label>
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Presença de cateter em câmaras direitas."><span>Cateter em câmaras D.</span></label>
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Cateter venoso central em cavidades direitas."><span>CVC</span></label>
           </div>
           <div class="field-row cols-2" style="margin-top:9px">
@@ -683,6 +690,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <div class="fld"><label>Método área valvar</label>
                 <select id="vm-area-met">
                   <option value="PHT">PHT</option>
+                  <option value="planimetria">planimetria</option>
+                  <option value="planimetria 3D">planimetria 3D</option>
                   <option value="">não especificar</option>
                 </select>
               </div>
@@ -713,10 +722,18 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Imagem sugestiva de trombo"><span>Trombo</span></label>
               <label class="opt-chip"><input type="checkbox" name="vm-prot-add" value="Pannus"><span>Pannus</span></label>
             </div>
-            <div class="field-row cols-3">
+            <div class="field-row cols-4">
               <div class="fld fld-suffix"><label>Grad. máximo</label><input id="vm-prot-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-prot-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
-              <div class="fld fld-suffix"><label>Área efetiva</label><input id="vm-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+              <div class="fld fld-suffix"><label>Área valvar</label><input id="vm-prot-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+              <div class="fld"><label>Método área</label>
+                <select id="vm-prot-area-met">
+                  <option value="método de continuidade">continuidade</option>
+                  <option value="PHT">PHT</option>
+                  <option value="planimetria">planimetria</option>
+                  <option value="">efetiva (sem método)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -745,8 +762,28 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="abertura em domo"><span>Abertura em domo</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="calcificação nas bordas livres"><span>Calcif. bordas livres</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="extensa calcificação degenerativa"><span>Extensa calcif. degener.</span></label>
-              <label class="opt-chip"><input type="checkbox" name="va-morf" value="com vegetação"><span>Vegetação</span></label>
+              <label class="opt-chip"><input type="checkbox" name="va-morf" value="com prolapso de uma das válvulas"><span>Prolapso (1 válvula)</span></label>
               <label class="opt-chip"><input type="checkbox" name="va-morf" value="janela limitada"><span>Janela limitada</span></label>
+            </div>
+            <span class="opt-label">Vegetação / endocardite (opcional)</span>
+            <div class="opts-grid">
+              <label class="opt-chip" id="va-veg-chip"><input type="checkbox" id="va-veg-chk"><span>Vegetação (descrever)</span></label>
+            </div>
+            <div id="va-veg-row" style="display:none">
+              <div class="field-row cols-2">
+                <div class="fld"><label>Cúspide acometida</label>
+                  <select id="va-veg-cusp">
+                    <option value="válvula não coronariana">não coronariana</option>
+                    <option value="válvula coronariana direita">coronariana direita</option>
+                    <option value="válvula coronariana esquerda">coronariana esquerda</option>
+                    <option value="válvula">não especificar</option>
+                  </select>
+                </div>
+                <div class="fld"><label>Dimensão (ex: 0,7x0,4cm)</label><input id="va-veg-size" type="text" placeholder="0,7x0,4cm"></div>
+              </div>
+              <div class="opts-grid">
+                <label class="opt-chip sel"><input type="checkbox" id="va-veg-neg" checked><span>Acrescentar "ausência de fístula, perfuração ou abscesso"</span></label>
+              </div>
             </div>
             <span class="opt-label">Refluxo</span>
             <div class="opts-grid">
@@ -763,6 +800,10 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value=""><span>Não especificar</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value="de etiologia degenerativa"><span>Etiologia degenerativa</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value="secundário à dilatação da raiz da aorta"><span>Sec. dilatação da raiz</span></label>
+            </div>
+            <div class="field-row cols-2">
+              <div class="fld fld-suffix"><label>PHT do refluxo (opcional)</label><input id="va-refl-pht" type="number" placeholder="ms"><span class="suffix">ms</span></div>
+              <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Sai como "(PHT: Xms)"</div></div>
             </div>
             <span class="opt-label">Estenose</span>
             <div class="opts-grid">
@@ -844,7 +885,12 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="opts-grid">
               <label class="opt-chip"><input type="radio" name="vt-refl-causa" value=""><span>Não especificar</span></label>
               <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="secundário a dilatação do anel"><span>Sec. dilatação anel</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="secundário a dilatação do anel e remodelamento ventricular"><span>Sec. anel + remodelam. ventr.</span></label>
+              <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="de etiologia mista, dilatação do anel e relacionada a dispositivo cardíaco implantável"><span>Mista (anel + dispositivo)</span></label>
               <label class="opt-chip"><input type="radio" name="vt-refl-causa" value="funcional"><span>Funcional</span></label>
+            </div>
+            <div class="opts-grid">
+              <label class="opt-chip"><input type="checkbox" id="vt-coapt"><span>Com falha de coaptação</span></label>
             </div>
           </div>
           <div class="hint" style="margin-top:7px">Dados de PSAP são reportados na Valva Pulmonar (próxima seção).</div>
@@ -872,6 +918,13 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <div class="fld fld-suffix"><label>Vel. máx. refluxo TR</label><input id="vt-vmax" type="number" step="0.1" placeholder="m/s"><span class="suffix">m/s</span></div>
             <div class="fld"><label>PAD presumida</label><select id="vt-pad"><option value="5">5 mmHg</option><option value="10">10 mmHg</option><option value="15">15 mmHg</option></select></div>
             <div class="fld fld-suffix fld-calc"><label>PSAP estimada</label><input id="vt-psap" readonly><span class="suffix">mmHg</span></div>
+          </div>
+          <span class="opt-label" style="margin-top:8px">Observação da PSAP (opcional)</span>
+          <div class="opts-grid">
+            <label class="opt-chip sel"><input type="radio" name="vp-psap-obs" value="" checked><span>Nenhuma</span></label>
+            <label class="opt-chip"><input type="radio" name="vp-psap-obs" value="subestimado"><span>Pode estar subestimado (IT importante)</span></label>
+            <label class="opt-chip"><input type="radio" name="vp-psap-obs" value="nao-estimavel"><span>Não estimável (sem refluxo)</span></label>
+            <label class="opt-chip"><input type="radio" name="vp-psap-obs" value="nao-estimavel-coapt"><span>Não estimável (falha de coaptação)</span></label>
           </div>
           <div class="hint">Texto sai na linha da Valva Pulmonar. Auto: &lt;35 N · 35–49 D · 50–69 M · ≥70 I</div>
         </div>
@@ -917,7 +970,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
         <div class="sec-body">
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="septo" value="normal" checked><span>Sem shunt</span></label>
-            <label class="opt-chip"><input type="radio" name="septo" value="fop"><span>FOP / CIA OS</span></label>
+            <label class="opt-chip"><input type="radio" name="septo" value="fop"><span>Forame oval patente (FOP)</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="fop-pos-ablacao"><span>Shunt lâmina fossa oval (pós-ablação)</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="cia"><span>CIA com shunt</span></label>
             <label class="opt-chip"><input type="radio" name="septo" value="civ"><span>CIV</span></label>
@@ -935,6 +988,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
             <label class="opt-chip sel"><input type="radio" name="septo-ia" value="" checked><span>Sem descrição</span></label>
             <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial redundante."><span>Redundante</span></label>
             <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial com hipertrofia lipomatosa."><span>Hipertrofia lipomatosa</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial com infiltração lipomatosa."><span>Infiltração lipomatosa</span></label>
             <label class="opt-chip"><input type="radio" name="septo-ia" value="Septo interatrial aneurismático."><span>Aneurismático</span></label>
           </div>
           <div class="divider"></div>
@@ -990,12 +1044,14 @@ body[data-density="compact"] .section{margin-bottom:8px}
           </div>
           <span class="opt-label">Trombos</span>
           <div class="opts-grid">
-            <label class="opt-chip sel"><input type="radio" name="ete-trombos" value="ausencia" checked><span>Ausência</span></label>
+            <label class="opt-chip sel"><input type="radio" name="ete-trombos" value="nao-descrever" checked><span>Não descrever</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-trombos" value="ausencia"><span>Ausência</span></label>
             <label class="opt-chip"><input type="radio" name="ete-trombos" value="presenca"><span>Presença (descrever)</span></label>
           </div>
           <span class="opt-label">Vegetação (ETE)</span>
           <div class="opts-grid">
-            <label class="opt-chip sel"><input type="radio" name="ete-veg" value="ausencia" checked><span>Ausência</span></label>
+            <label class="opt-chip sel"><input type="radio" name="ete-veg" value="nao-descrever" checked><span>Não descrever</span></label>
+            <label class="opt-chip"><input type="radio" name="ete-veg" value="ausencia"><span>Ausência</span></label>
             <label class="opt-chip"><input type="radio" name="ete-veg" value="presenca"><span>Presença (descrever)</span></label>
           </div>
           <div class="fld" style="margin-top:9px"><label>Observação adicional ETE (opcional)</label><textarea id="ete-obs" rows="2" placeholder="Detalhes adicionais do ETE..."></textarea></div>
