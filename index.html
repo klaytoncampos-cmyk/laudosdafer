@@ -220,6 +220,24 @@ body[data-density="compact"] .section{margin-bottom:8px}
 .stat-card .sub{font-size:11px;color:var(--muted);margin-top:3px}
 @media(max-width:1280px){.work{grid-template-columns:180px 1fr 440px}}
 @media(max-width:1100px){.work{grid-template-columns:0 1fr 400px}.nav-pane{display:none}}
+.sec-chevron{margin-left:8px;color:var(--muted);font-size:11px;transition:transform .15s;flex-shrink:0}
+.section.collapsed .sec-body{display:none}
+.section.collapsed .sec-head{border-bottom:none}
+.section.collapsed .sec-chevron{transform:rotate(-90deg)}
+.section.collapsed .sec-head:hover{background:var(--bg)}
+.nav-group{margin-bottom:4px}
+.nav-group-title{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px 3px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.nav-group-title:hover{color:var(--text2)}
+.nav-group-title .ng-ch{font-size:9px;transition:transform .15s}
+.nav-group.collapsed .ng-ch{transform:rotate(-90deg)}
+.nav-group.collapsed .nav-section{display:none}
+.p-section.active-sec{background:var(--teal-pale);border-left:2.5px solid var(--teal);border-radius:0 6px 6px 0;padding:3px 8px;margin-left:-8px}
+input.sp-indic-input{border:1px solid transparent;background:transparent;color:var(--text);font-weight:600;font-size:12.5px;font-family:'Inter',sans-serif;padding:2px 7px;border-radius:5px;width:250px;max-width:42vw;outline:none}
+input.sp-indic-input::placeholder{color:var(--muted);font-weight:500}
+input.sp-indic-input:hover{border-color:var(--border2)}
+input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
+.tb-btn.na-empty{opacity:.5}
+.tb-btn .na-count{font-weight:700;margin-left:2px}
 </style>
 </head>
 <body data-theme="light" data-density="comfortable">
@@ -244,6 +262,8 @@ body[data-density="compact"] .section{margin-bottom:8px}
     </div>
     <div class="tb-actions">
       <button class="tb-btn primary" onclick="aplicarTudoNormal()">✓ Tudo normal</button>
+      <button class="tb-btn" id="btn-expand-all" onclick="toggleExpandAll()">⊕ Expandir todas</button>
+      <button class="tb-btn" id="btn-next-altered" onclick="gotoNextAltered()">⚠ Próximo alterado <span class="na-count">0</span></button>
       <div class="dropdown-wrap">
         <button class="tb-btn" onclick="toggleDropdown('dd-tpl')">Templates ▾</button>
         <div class="dropdown-menu" id="dd-tpl">
@@ -264,7 +284,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
   </div>
 
   <div class="sticky-pat">
-    <div class="pat-item"><span class="lbl">Paciente:</span><span class="val" id="sp-indic">—</span></div>
+    <div class="pat-item"><span class="lbl">Paciente:</span><input class="val sp-indic-input" id="sp-indic" placeholder="indicação..." oninput="syncIndicFromHeader(this.value)"></div>
     <div class="sep"></div>
     <div class="pat-item"><span class="lbl">Sexo:</span><span class="val" id="sp-sexo">—</span></div>
     <div class="sep"></div>
@@ -661,12 +681,14 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="vm-refl-causa" value="secundário ao remodelamento atrial e ventricular"><span>Sec. remodelamento atrial/ventr.</span></label>
               <label class="opt-chip"><input type="radio" name="vm-refl-causa" value="secundário à dilatação do anel"><span>Sec. dilatação do anel</span></label>
             </div>
+            <div id="vm-wilk-wrap" style="display:none">
             <span class="opt-label">Escore de Wilkins (opcional — estenose reumática)</span>
             <div class="field-row cols-4">
               <div class="fld"><label>Mobilidade</label><select id="vm-wilk-mob"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
               <div class="fld"><label>Subvalvar</label><select id="vm-wilk-sub"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
               <div class="fld"><label>Folhetos</label><select id="vm-wilk-fol"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
               <div class="fld"><label>Calcificação</label><select id="vm-wilk-calc"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+            </div>
             </div>
             <span class="opt-label">Estenose</span>
             <div class="opts-grid">
@@ -675,6 +697,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
               <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose moderada"><span>Moderada</span></label>
               <label class="opt-chip"><input type="radio" name="vm-est" value="Estenose importante"><span>Importante</span></label>
             </div>
+            <div id="vm-grad-wrap" style="display:none">
             <div class="field-row cols-3">
               <div class="fld fld-suffix"><label>Grad. máximo</label><input id="vm-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="vm-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
@@ -696,6 +719,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
                   <option value="">não especificar</option>
                 </select>
               </div>
+            </div>
             </div>
             <div id="sugest-vm"></div>
           </div>
