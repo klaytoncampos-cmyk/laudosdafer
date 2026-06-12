@@ -63,8 +63,13 @@ async function showApp() {
   await loadFrases();
   buildNavSidebar();
   initBullseye();
+  initCollapsible();
   renderPreview();
   updateStickyHeader();
+  updateStatuses();
+  updateNav();
+  applyCollapse();
+  applyVmEstenose();
   state.startTime = Date.now();
 }
 document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -82,7 +87,10 @@ const state = {
   frases: [],
   startTime: Date.now(),
   tipo: 'ETT',
-  eteTipo: 'transesofagica'
+  eteTipo: 'transesofagica',
+  compact: true,
+  secOpen: {},
+  activeSec: null
 };
 
 function setTipo(t) {
@@ -123,20 +131,147 @@ const SECTIONS_NAV = [
   { id:'concl', num:'★', label:'Conclusão' }
 ];
 
+// Seções que podem ser recolhidas (têm badge de status). NÃO inclui paciente/medidas/conclusão.
+const COLLAPSIBLE = ['aorta','ae','ve','ad','vd','vm','va','vt','vp','peri','septo','vci'];
+
+// Agrupamento da navegação lateral
+const NAV_GROUPS = [
+  { title:null, items:['paciente','estrut'] },
+  { title:'Estrutura', items:['aorta','ae','ve','ad','vd'] },
+  { title:'Valvas', items:['vm','va','vt','vp'] },
+  { title:'Complementos', items:['peri','septo','vci','ete','eteiso'] },
+  { title:null, items:['concl'] }
+];
+
+// Mapa rótulo da seção do preview → id da seção (para destaque da seção ativa)
+const LBL2SEC = [
+  ['AORTA','aorta'],['ÁTRIO ESQUERDO','ae'],['VENTRÍCULO ESQUERDO','ve'],
+  ['ÁTRIO DIREITO','ad'],['VENTRÍCULO DIREITO','vd'],
+  ['MITRAL','vm'],['AÓRTICA','va'],['TRICÚSPIDE','vt'],['PULMONAR','vp'],
+  ['PERICÁRDIO','peri'],['SEPTO','septo']
+];
+function lblToSec(lbl) { for (const [k, v] of LBL2SEC) { if (lbl.includes(k)) return v; } return null; }
+
 function buildNavSidebar() {
   const pane = document.getElementById('nav-pane');
-  pane.innerHTML = SECTIONS_NAV.map(s => `
-    <div class="nav-section normal" data-target="${s.id}" onclick="scrollToSec('${s.id}')" style="${(s.eteOnly || s.eteIsoOnly) ? 'display:none' : ''}">
-      <div class="nav-num">${s.num}</div>
-      <div class="nav-label">${s.label}</div>
-      <div class="nav-status">○</div>
-    </div>
-  `).join('');
+  const byId = {};
+  SECTIONS_NAV.forEach(s => { byId[s.id] = s; });
+  let html = '';
+  NAV_GROUPS.forEach((g, gi) => {
+    const gid = 'navg-' + gi;
+    html += `<div class="nav-group" id="${gid}">`;
+    if (g.title) html += `<div class="nav-group-title" onclick="toggleNavGroup('${gid}')"><span class="ng-ch">▾</span>${g.title}</div>`;
+    g.items.forEach(id => {
+      const s = byId[id];
+      if (!s) return;
+      const hidden = (s.eteOnly || s.eteIsoOnly) ? 'display:none' : '';
+      html += `<div class="nav-section normal" data-target="${s.id}" onclick="scrollToSec('${s.id}')" style="${hidden}">`
+        + `<div class="nav-num">${s.num}</div><div class="nav-label">${s.label}</div><div class="nav-status">○</div></div>`;
+    });
+    html += `</div>`;
+  });
+  pane.innerHTML = html;
+}
+
+function toggleNavGroup(gid) {
+  const g = document.getElementById(gid);
+  if (g) g.classList.toggle('collapsed');
 }
 
 function scrollToSec(id) {
+  if (COLLAPSIBLE.indexOf(id) !== -1) { state.secOpen[id] = true; applyCollapse(); }
+  state.activeSec = id;
   const el = document.getElementById('sec-' + id);
   if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  renderPreview();
+}
+
+// ════════════════════════════════════════
+// RECOLHER SEÇÕES NORMAIS (compacto por padrão)
+// Puramente visual: não altera nada do laudo gerado nem do texto copiado.
+// ════════════════════════════════════════
+function sectionOpen(sec) {
+  if (!state.compact) return true;
+  if (sec in state.secOpen) return state.secOpen[sec];
+  const st = document.getElementById('st-' + sec);
+  return !!(st && st.classList.contains('alterado'));
+}
+
+function applyCollapse() {
+  COLLAPSIBLE.forEach(sec => {
+    const card = document.getElementById('sec-' + sec);
+    if (card) card.classList.toggle('collapsed', !sectionOpen(sec));
+  });
+  const btn = document.getElementById('btn-expand-all');
+  if (btn) btn.textContent = state.compact ? '⊕ Expandir todas' : '⊖ Recolher normais';
+}
+
+function toggleSection(sec) {
+  state.secOpen[sec] = !sectionOpen(sec);
+  applyCollapse();
+}
+
+function toggleExpandAll() {
+  state.compact = !state.compact;
+  if (state.compact) state.secOpen = {};
+  applyCollapse();
+}
+
+function initCollapsible() {
+  COLLAPSIBLE.forEach(sec => {
+    const card = document.getElementById('sec-' + sec);
+    if (!card) return;
+    const head = card.querySelector('.sec-head');
+    if (head && !head.querySelector('.sec-chevron')) {
+      const ch = document.createElement('div');
+      ch.className = 'sec-chevron';
+      ch.textContent = '▾';
+      head.appendChild(ch);
+      head.style.cursor = 'pointer';
+      head.addEventListener('click', () => toggleSection(sec));
+    }
+  });
+}
+
+// Pula para a próxima seção alterada (revisão rápida antes de copiar)
+function listAltered() {
+  return COLLAPSIBLE.filter(sec => {
+    const st = document.getElementById('st-' + sec);
+    return st && st.classList.contains('alterado');
+  });
+}
+function gotoNextAltered() {
+  const alt = listAltered();
+  if (!alt.length) return;
+  const idx = alt.indexOf(state.activeSec);
+  const next = alt[(idx + 1) % alt.length];
+  state.secOpen[next] = true;
+  applyCollapse();
+  scrollToSec(next);
+}
+
+// Progressive disclosure da Valva Mitral: Wilkins + gradientes só com estenose marcada
+function applyVmEstenose() {
+  const on = !!getRadio('vm-est');
+  const w = document.getElementById('vm-wilk-wrap');
+  const g = document.getElementById('vm-grad-wrap');
+  if (w) w.style.display = on ? 'block' : 'none';
+  if (g) g.style.display = on ? 'block' : 'none';
+}
+
+// Destaque da seção ativa no preview + sincroniza indicação do header
+function setActiveSec(sec) {
+  if (!sec || state.activeSec === sec) return;
+  state.activeSec = sec;
+  renderPreview();
+  const blk = document.querySelector(`#preview-body .p-section[data-sec="${sec}"]`);
+  const body = document.getElementById('preview-body');
+  if (blk && body) body.scrollTop = Math.max(0, blk.offsetTop - body.offsetTop - 12);
+}
+function syncIndicFromHeader(v) {
+  const pac = document.getElementById('pac-indic');
+  if (pac) pac.value = v;
+  renderPreview();
 }
 
 // ════════════════════════════════════════
@@ -171,6 +306,7 @@ function setMode(sec, mode) {
   if (sec === 'ae') {
     document.getElementById('ae-grau-block').style.display = mode === 'alterado' ? 'block' : 'none';
   }
+  if (sec === 'vm') applyVmEstenose();
   renderPreview();
   updateStatuses();
   updateNav();
@@ -1750,7 +1886,10 @@ function renderPreview() {
   R.sections.forEach(s => {
     const frases = splitSentences(s.txt);
     const corpo = frases.map(f => `<div class="p-text">${f}</div>`).join('');
-    html += `<div class="p-section" style="margin-top:8px"><span class="p-label">${s.lbl}:</span>${corpo}</div>`;
+    const sec = lblToSec(s.lbl);
+    const act = (sec && sec === state.activeSec) ? ' active-sec' : '';
+    const da = sec ? ` data-sec="${sec}"` : '';
+    html += `<div class="p-section${act}"${da} style="margin-top:8px"><span class="p-label">${s.lbl}:</span>${corpo}</div>`;
   });
   if (R.extras.length) {
     html += '<div class="p-section" style="margin-top:8px">' + R.extras.map(e => `<span class="p-text">${e}</span>`).join(' ') + '</div>';
@@ -1787,6 +1926,7 @@ function updateStatuses() {
   setStatus('ad', state.mode.ad === 'alterado');
   setStatus('vt', state.mode.vt === 'alterado');
   setStatus('vp', state.mode.vp === 'alterado' || getRadio('vp-base') === 'alterada');
+  applyCollapse();
 }
 
 function setStatus(sec, isAlt, customLabel) {
@@ -1807,6 +1947,13 @@ function updateNav() {
     ns.className = `nav-section ${cls}`;
     ns.querySelector('.nav-status').textContent = icon;
   });
+  const btnNext = document.getElementById('btn-next-altered');
+  if (btnNext) {
+    const n = listAltered().length;
+    const c = btnNext.querySelector('.na-count');
+    if (c) c.textContent = n;
+    btnNext.classList.toggle('na-empty', n === 0);
+  }
 }
 
 function updateStickyHeader() {
@@ -1816,7 +1963,8 @@ function updateStickyHeader() {
   const fc = num('pac-fc');
   const feve = num('ve-feve');
   const psap = document.getElementById('vt-psap').value;
-  document.getElementById('sp-indic').textContent = indic.length > 30 ? indic.slice(0,30) + '...' : indic;
+  const spIndic = document.getElementById('sp-indic');
+  if (spIndic && document.activeElement !== spIndic) spIndic.value = document.getElementById('pac-indic').value;
   document.getElementById('sp-sexo').textContent = sexo === 'M' ? '♂' : sexo === 'F' ? '♀' : '—';
   document.getElementById('sp-ritmo').textContent = fc ? `${ritmo} (${fc}bpm)` : ritmo;
   const sfeve = document.getElementById('sp-feve-wrap');
@@ -1890,6 +2038,9 @@ function resetAll() {
   state.bullseye = {};
   state.bullseyeActiveState = 'hipocinesia';
   state.manualOverride = {};
+  state.compact = true;
+  state.secOpen = {};
+  state.activeSec = null;
   state.startTime = Date.now();
   state.tipo = 'ETT';
   state.eteTipo = 'transesofagica';
@@ -1955,6 +2106,8 @@ function resetAll() {
   updateStatuses();
   updateNav();
   updateStickyHeader();
+  applyVmEstenose();
+  applyCollapse();
 }
 
 function aplicarTudoNormal() { resetAll(); document.getElementById('preview-meta').textContent = 'tudo normal aplicado'; }
@@ -2104,3 +2257,20 @@ async function toggleDensity() {
   document.body.setAttribute('data-density', next);
   await api.setPreferences({ density: next });
 }
+
+// ════════════════════════════════════════
+// LAYOUT — listeners delegados (adições V9, somente UI)
+// ════════════════════════════════════════
+document.addEventListener('change', e => {
+  if (e.target && e.target.name === 'vm-est') applyVmEstenose();
+});
+(function () {
+  const fp = document.getElementById('form-pane');
+  if (!fp) return;
+  const pick = e => {
+    const card = e.target.closest && e.target.closest('.section[data-id]');
+    if (card) setActiveSec(card.dataset.id);
+  };
+  fp.addEventListener('focusin', pick);
+  fp.addEventListener('click', pick);
+})();
