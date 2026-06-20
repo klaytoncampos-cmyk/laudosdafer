@@ -277,7 +277,7 @@ function syncIndicFromHeader(v) {
 // ════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════
-function num(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+function num(id) { const v = parseFloat(String(document.getElementById(id).value).replace(',', '.')); return isNaN(v) ? null : v; }
 function fmt(n, d=2) { return n===null ? '' : Number(n).toFixed(d).replace('.', ','); }
 function getRadio(name) { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : null; }
 function getChecks(name) { return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(e=>e.value); }
@@ -1079,6 +1079,13 @@ function genReport() {
     altered.push('ve-contraste');
   }
 
+  // Gradiente dinâmico na via de saída do VE (estado hiperdinâmico)
+  const veLvot = num('ve-lvot');
+  if (veLvot !== null) {
+    veLines.push(`Gradiente dinâmico na via de saída do ventrículo esquerdo de ${veLvot} mmHg (estado hiperdinâmico).`);
+    altered.push('ve-lvot');
+  }
+
   R.sections.push({ lbl:'VENTRÍCULO ESQUERDO', txt:veLines.join(' ') });
 
   // AD
@@ -1185,7 +1192,7 @@ function genReport() {
   const sep = getRadio('septo') || 'normal';
   const sepMap = {
     'normal':'Não foi visualizado shunt ao Doppler colorido.',
-    'fop':'Presença de fluxo esquerda-direita pelo forame oval, compatível com forame oval patente (FOP).',
+    'fop':'Shunt pelo septo interatrial, esquerda-direita, sugestivo de forame oval patente.',
     'fop-pos-ablacao':'Presença de shunt interatrial esquerda direita na lâmina da fossa oval compatível com status pós procedimento (ablação de fibrilação atrial prévia).',
     'cia':'Comunicação interatrial com shunt ao Doppler colorido.',
     'civ':'Comunicação interventricular ao Doppler colorido.'
@@ -1195,7 +1202,7 @@ function genReport() {
   // Microbolhas
   const micro = getRadio('septo-micro');
   if (micro === 'negativa') {
-    septoTxt += ' Pesquisa de shunt intracardíaco com contraste salino agitado (microbolhas): ausência de passagem de microbolhas do lado direito para o lado esquerdo das cavidades cardíacas.';
+    septoTxt += ' Infusão de solução salina agitada evidenciou opacificação adequada das cavidades direitas, sem o surgimento de microbolhas nas cavidades esquerdas em repouso. Ausência de evidência ecocardiográfica de comunicação interatrial (shunt direita-esquerda).';
   } else if (micro === 'positiva') {
     septoTxt += ' Pesquisa de shunt intracardíaco com contraste salino agitado (microbolhas): presença de passagem de microbolhas do lado direito para o lado esquerdo das cavidades cardíacas.';
     altered.push('septo:micro-pos');
@@ -1241,10 +1248,10 @@ function genReport() {
   const plE = document.getElementById('achado-pleural-e')?.checked;
   const plD = document.getElementById('achado-pleural-d')?.checked;
   const plB = document.getElementById('achado-pleural-bilat')?.checked;
-  if (plB) { R.extras.push('Achado extracardíaco: derrame pleural bilateral.'); altered.push('pleural'); }
-  else if (plE && plD) { R.extras.push('Achado extracardíaco: derrame pleural bilateral.'); altered.push('pleural'); }
-  else if (plE) { R.extras.push('Achado extracardíaco: derrame pleural à esquerda.'); altered.push('pleural'); }
-  else if (plD) { R.extras.push('Achado extracardíaco: derrame pleural à direita.'); altered.push('pleural'); }
+  if (plB) { R.extras.push('Achados adicionais: derrame pleural bilateral.'); altered.push('pleural'); }
+  else if (plE && plD) { R.extras.push('Achados adicionais: derrame pleural bilateral.'); altered.push('pleural'); }
+  else if (plE) { R.extras.push('Achados adicionais: derrame pleural à esquerda.'); altered.push('pleural'); }
+  else if (plD) { R.extras.push('Achados adicionais: derrame pleural à direita.'); altered.push('pleural'); }
 
   // ETE
   if (state.tipo === 'ETE') {
@@ -1543,7 +1550,7 @@ function buildAorticaSection(altered) {
     if (refl && reflPht !== null) dopplerLine += ` (PHT: ${reflPht}ms)`;
 
     const np = [];
-    if (vmax) np.push(`Vmax= ${vmax}m/s`);
+    if (vmax) np.push(`Veloc máx.: ${fmt(vmax,1)}m/s`);
     const prefix = gradTipo ? `Gradiente ${gradTipo}` : 'Gradiente';
     if (gradMax !== null && grad !== null) np.push(`${prefix} máximo de ${gradMax}mmHg e médio de ${grad}mmHg`);
     else if (gradMax !== null) np.push(`${prefix} máximo de ${gradMax}mmHg`);
@@ -1553,6 +1560,8 @@ function buildAorticaSection(altered) {
       const aTxt = areaMet ? `Área valvar = ${area}cm² (${areaMet})` : `Área valvar = ${area}cm²`;
       np.push(aTxt);
     }
+    const idxDoppler = num('va-idx');
+    if (idxDoppler !== null) np.push(`Índice Doppler: ${fmt(idxDoppler,2)}`);
 
     if (est) {
       let eTxt = est.toLowerCase();

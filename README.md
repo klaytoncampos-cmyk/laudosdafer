@@ -183,59 +183,6 @@ Abre em `http://localhost:8788`.
 
 ## O que tem nessa versão
 
-**Novidades V8 (11/06/2026 — rodada grande de laudos da Santa Casa + UTI). Entregue em dois pacotes:**
-
-### Pacote A — refinamentos cirúrgicos
-
-*Valva aórtica:*
-- **Vegetação estruturada** — bloco "Vegetação (descrever)" com cúspide (não coronariana / coronariana direita / coronariana esquerda), dimensão e a negativa "Ausência de imagem sugestiva de fístula, perfuração ou abscesso". Gera: "Apresenta imagem arredondada, móvel, de aspecto algodonoso aderida à válvula coronariana direita, de 0,7x0,4cm, sugestivo de vegetação."
-- **Prolapso de uma das válvulas** ("Há prolapso de uma de suas válvulas").
-- **Refluxo com PHT** ("(PHT: Xms)").
-
-*Próteses (mitral e aórtica):*
-- Saem como **cabeçalho de seção próprio** ("PRÓTESE BIOLÓGICA/METÁLICA EM POSIÇÃO MITRAL/AÓRTICA", TAVI incluso) no lugar de "VALVA MITRAL/AÓRTICA".
-- Folheto descrito conforme o tipo: "Folhetos finos..." (biológica) / "Discos com abertura e mobilidade preservados" (mecânica).
-- Área valvar com método selecionável (continuidade / PHT / planimetria); prótese aórtica usa "Gradiente sistólico VE-Ao". Conclusão sai "...normofuncionante" ou "...com sinais de disfunção".
-
-*Valva mitral:*
-- Métodos de área valvar somados: **planimetria** e **planimetria 3D** (além de PHT).
-
-*ETE (complementação ao transtorácico):*
-- As frases negativas de trombos/vegetação **deixaram de ser automáticas** — Trombos e Vegetação começam em "Não descrever" e só entram se marcado "Ausência" ou "Presença".
-
-*Septos:*
-- **FOP** na redação da Dra.: "Presença de fluxo esquerda-direita pelo forame oval, compatível com forame oval patente (FOP)" (corpo) e "Forame oval patente (FOP)" (conclusão).
-- Septo interatrial: nova variante **"infiltração lipomatosa"**.
-
-*Ventrículo esquerdo / função:*
-- Septo IV: "Movimento paradoxal" e "Movimento paradoxal (retificação)".
-- Função diastólica: "Não avaliada (arritmia)".
-- Pressões de enchimento: variante "Ausência de sinais de aumento das pressões de enchimento" (além de "Há sinais").
-
-*Valva pulmonar / PSAP:*
-- Observações: "pode estar subestimado devido insuficiência tricúspide importante"; "não foi possível estimar a PSAP" (sem refluxo / por falha de coaptação).
-
-*Valva tricúspide:*
-- "Com falha de coaptação" e etiologias novas: "secundário a dilatação do anel e remodelamento ventricular" e "de etiologia mista, dilatação do anel e relacionada a dispositivo cardíaco implantável".
-
-*Ventrículo direito / ritmo:*
-- VD: "Presença de cateter em câmaras direitas".
-- Ritmo: "Regular com marcapasso".
-
-### Pacote B — ETE isolado (exame próprio)
-
-- Nova aba **"ETE isolado"** (além de ETT e ETT+ETE). O laudo sai como **ECOCARDIOGRAMA TRANSESOFÁGICO** na estrutura da Dra.: DADOS DESCRITIVOS (preâmbulo de decúbito/transdutor + anestesia/sedação + objetivo + ritmo cardíaco), **CÂMARAS**, **FUNÇÃO**, **VALVAS** (em bullets), **PERICÁRDIO** e **AORTA**.
-- Seção própria "ETE isolado — específico": objetivo do exame, anestesia/sedação (preset lidocaína spray + propofol), **apêndice atrial esquerdo** (contratilidade + contraste espontâneo graduado + trombo com dimensões), **septo interatrial** (íntegro / FOP / aneurismático / CIA).
-- Reaproveita AE, função do VE e **todas as valvas** das seções normais (reumática, estenose quantificada, próteses, etc.). Trombo no apêndice entra também na conclusão.
-
-*Adiado de propósito (aguarda revisão da Dra.):* refino do fraseado da **contratilidade segmentar** (ex.: "da parede inferior" vs. "dos segmentos basal e médio da parede inferior") — é mudança de redação em laudos já existentes; e a frase da **dupla lesão no ETE** (hoje sai "Dupla lesão valvar mitral [grau] (etiologia degenerativa senil)"; nos laudos de ETE a Dra. usa "Valva mitral com dupla disfunção: estenose discreta e insuficiência moderada").
-
-*Validação:* `node --check` + suíte de 53 testes jsdom com cenários reais (incl. regressão de ETT/ETT+ETE intactos).
-
----
-
-## Versões anteriores
-
 **Novidades V7 (03/06/2026 — aprovadas pela Dra.):**
 
 *Causa/etiologia do refluxo (seletor opcional, como já havia na tricúspide):*
@@ -255,6 +202,8 @@ Abre em `http://localhost:8788`.
 
 ---
 
+## Versões anteriores
+
 **Novidades V6 (01/06/2026):**
 
 *Formatação (pedido da Dra.):*
@@ -272,9 +221,11 @@ Abre em `http://localhost:8788`.
 - PSAP ≥ 50 → lembra refluxo tricúspide (só isso).
 - Hipertrofia importante → lembra disfunção diastólica (só isso).
 
-*Adiado de propósito (precisa a Dra. revisar o desenho):* ETE isolado como exame próprio e pesquisa de FOP com medidas. **(Ambos entregues na V8.)**
+*Adiado de propósito (precisa a Dra. revisar o desenho):* ETE isolado como exame próprio e pesquisa de FOP com medidas.
 
 ---
+
+## Versões anteriores
 
 **Novidades V5 (revisão dos laudos do Hospital Evangélico — chefe da Dra. Fernanda):**
 
@@ -308,7 +259,7 @@ Abre em `http://localhost:8788`.
 
 *Correção de bug:* o checkbox de refluxo secundário da mitral estava com `name` mas era lido por `getElementById` — nunca teria funcionado; corrigido para `id`.
 
-*Adiado para revisão da Dra. Fernanda (não implementado):* **ETE isolado** como exame próprio e **pesquisa de FOP com medidas do forame**. **(Ambos entregues na V8.)**
+*Adiado para revisão da Dra. Fernanda (não implementado):* **ETE isolado** como exame próprio (hoje só existe como complementação do transtorácico) e **pesquisa de FOP com medidas do forame** — são estrutura nova grande, melhor validar o desenho antes.
 
 ---
 

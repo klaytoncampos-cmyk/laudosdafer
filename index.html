@@ -307,7 +307,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <div class="fld"><label>Sexo</label><select id="pac-sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
           </div>
           <div class="field-row cols-4">
-            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Sinusal com arritmias paroxísticas durante o exame</option><option>Regular com extrassístoles frequentes</option><option>Regular, taquicárdico</option><option>Regular com marcapasso</option><option>Irregular</option><option>Fibrilação atrial</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
+            <div class="fld"><label>Ritmo</label><select id="pac-ritmo"><option>Regular</option><option>Sinusal</option><option>Sinusal com arritmias paroxísticas durante o exame</option><option>Regular com extrassístoles frequentes</option><option>Regular e taquicárdico</option><option>Regular com marcapasso</option><option>Irregular</option><option>Fibrilação atrial</option><option>FAAR</option><option>Flutter atrial</option><option>Ritmo de marcapasso</option></select></div>
             <div class="fld fld-suffix"><label>FC (opcional)</label><input id="pac-fc" type="number" placeholder="bpm"><span class="suffix">bpm</span></div>
             <div class="fld fld-suffix"><label>Peso</label><input id="pac-peso" type="number" step="0.1" placeholder="kg"><span class="suffix">kg</span></div>
             <div class="fld fld-suffix"><label>Altura</label><input id="pac-alt" type="number" placeholder="cm"><span class="suffix">cm</span></div>
@@ -452,6 +452,9 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <div class="fld"><label>Método</label><select id="ve-feve-met"><option>Simpson</option><option>Teicholz</option><option value="Teicholz-janela">Teicholz - janela limitada</option></select></div>
             <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Cortes por sexo</div></div>
           </div>
+          <div class="field-row cols-3">
+            <div class="fld fld-suffix"><label>Grad. dinâmico VSVE (opcional)</label><input id="ve-lvot" type="number" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+          </div>
           <span class="opt-label">Função sistólica</span>
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="ve-sist" value="preservada" checked><span>Preservada</span></label>
@@ -594,6 +597,8 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Eletrodos de marcapasso em cavidades direitas."><span>Eletrodos de MP</span></label>
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Presença de cateter em câmaras direitas."><span>Cateter em câmaras D.</span></label>
             <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Cateter venoso central em cavidades direitas."><span>CVC</span></label>
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Septo interventricular retificado e com movimento paradoxal, sugestivo de sobrecarga de pressão no ventrículo direito."><span>Sobrecarga de pressão (septo paradoxal)</span></label>
+            <label class="opt-chip"><input type="checkbox" name="vd-obs" value="Imagem ecogênica e homogênea, aderida à região apical, sugestiva de trombo."><span>Trombo apical</span></label>
           </div>
           <div class="field-row cols-2" style="margin-top:9px">
             <div class="fld fld-suffix"><label>TAPSE (opcional)</label><input id="vd-tapse" type="number" placeholder="mm"><span class="suffix">mm</span></div>
@@ -631,6 +636,8 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
               <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação moderada do anel posterior"><span>Mod. anel post.</span></label>
               <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação importante do anel valvar"><span>Imp. anel valvar</span></label>
               <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação do anel mitral posterior"><span>Sem grau (anel post.)</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação do anel posterior"><span>Anel posterior</span></label>
+              <label class="opt-chip"><input type="radio" name="vm-calc" value="Calcificação discreta do anel"><span>Disc. anel</span></label>
             </div>
             <span class="opt-label">Imagem ecogênica / vegetação</span>
             <div class="opts-grid">
@@ -843,6 +850,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
               <div class="fld fld-suffix"><label>Grad. máximo</label><input id="va-grad-max" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Grad. médio</label><input id="va-grad" type="number" step="0.1" placeholder="mmHg"><span class="suffix">mmHg</span></div>
               <div class="fld fld-suffix"><label>Área valvar</label><input id="va-area" type="number" step="0.1" placeholder="cm²"><span class="suffix">cm²</span></div>
+              <div class="fld fld-suffix"><label>Índice Doppler</label><input id="va-idx" type="number" step="0.01" placeholder="DVI"><span class="suffix"></span></div>
             </div>
             <div class="field-row cols-2">
               <div class="fld"><label>Tipo de gradiente</label>
