@@ -113,6 +113,7 @@ body[data-density="compact"] .section{margin-bottom:8px}
 .fld-suffix .suffix{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:500;pointer-events:none}
 .fld-calc input{background:var(--teal-pale);font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--teal2)}
 .fld-crit input{border-color:var(--crit);background:var(--crit-pale)}
+.fld-implausible input{border-color:var(--warn);background:var(--warn-pale)}
 .opts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:5px;margin-bottom:9px}
 .opts-grid.dense{grid-template-columns:repeat(auto-fit,minmax(95px,1fr))}
 .opt-chip{display:flex;align-items:center;justify-content:center;text-align:center;padding:7px 10px;border:1.5px solid var(--border2);border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;background:var(--card);color:var(--text2);user-select:none;line-height:1.3;position:relative;transition:all .15s}
@@ -238,6 +239,18 @@ input.sp-indic-input:hover{border-color:var(--border2)}
 input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
 .tb-btn.na-empty{opacity:.5}
 .tb-btn .na-count{font-weight:700;margin-left:2px}
+.btn-revisar{background:var(--teal);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-revisar:hover{background:var(--teal2)}
+#revisar-text{width:100%;border:none;outline:none;resize:none;min-height:62vh;padding:22px 26px;font-family:'Inter',sans-serif;font-size:18px;line-height:1.8;color:var(--text);background:var(--card)}
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.search-overlay.shown{display:flex}
+.search-box{background:var(--card);border-radius:12px;width:480px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+.search-box input{width:100%;border:none;border-bottom:1px solid var(--border);padding:14px 16px;font-size:15px;font-family:'Inter',sans-serif;outline:none;background:var(--card);color:var(--text)}
+.search-results{max-height:50vh;overflow-y:auto}
+.search-item{padding:10px 16px;font-size:13px;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:10px}
+.search-item.active,.search-item:hover{background:var(--teal-pale);color:var(--teal2)}
+.search-item .si-num{width:20px;height:20px;border-radius:5px;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.search-hint{padding:8px 16px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);display:flex;gap:14px}
 </style>
 </head>
 <body data-theme="light" data-density="comfortable">
@@ -454,6 +467,8 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
           </div>
           <div class="field-row cols-3">
             <div class="fld fld-suffix"><label>Grad. dinâmico VSVE (opcional)</label><input id="ve-lvot" type="number" placeholder="mmHg"><span class="suffix">mmHg</span></div>
+            <div class="fld fld-suffix"><label>GLS (opcional)</label><input id="ve-gls" type="number" step="0.1" placeholder="%"><span class="suffix">%</span></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Reduzido se menos negativo que -17% (digite -16 ou 16)</div></div>
           </div>
           <span class="opt-label">Função sistólica</span>
           <div class="opts-grid">
@@ -604,6 +619,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <div class="fld fld-suffix"><label>TAPSE (opcional)</label><input id="vd-tapse" type="number" placeholder="mm"><span class="suffix">mm</span></div>
             <div class="fld fld-suffix"><label>Onda S' (opcional)</label><input id="vd-s" type="number" step="0.1" placeholder="cm/s"><span class="suffix">cm/s</span></div>
           </div>
+          <div class="hint">Ref.: TAPSE &lt; 17mm ou onda S' &lt; 9,5 cm/s sugerem disfunção sistólica do VD (referência para a técnica — não sai no laudo).</div>
         </div>
       </div>
 
@@ -1160,7 +1176,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
     </div>
 
     <div class="preview-pane">
-      <div class="preview-head"><h2>Laudo gerado</h2><div class="meta" id="preview-meta">— em tempo real —</div></div>
+      <div class="preview-head"><h2>Laudo gerado</h2><div style="display:flex;align-items:center;gap:10px;margin-left:auto"><div class="meta" id="preview-meta">— em tempo real —</div><button class="btn-revisar" onclick="openRevisar()" title="Abrir o laudo em modo editável para revisão">📝 Revisar</button></div></div>
       <div class="preview-body" id="preview-body"></div>
     </div>
   </div>
@@ -1195,6 +1211,30 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
       <div class="modal-body" id="stats-body"><div class="hint">Carregando...</div></div>
       <div class="modal-foot"><div class="hint" style="margin-right:auto">Sem dados de paciente.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeStats()">Fechar</button></div>
     </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-revisar">
+    <div class="modal" style="max-width:840px">
+      <div class="modal-head">
+        <h3>📝 Revisão do laudo</h3>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="regenerarRevisar()" title="Recarregar o texto a partir dos campos do formulário (descarta edições manuais)">↻ Regenerar</button>
+          <button class="modal-close" onclick="closeRevisar()">×</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding:0">
+        <textarea id="revisar-text" oninput="onRevisarEdit()" spellcheck="true"></textarea>
+      </div>
+      <div class="modal-foot"><div class="hint" style="margin-right:auto" id="revisar-hint">Edite à vontade. "Copiar" leva o texto já com suas edições.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeRevisar()">Fechar</button><button class="btn-revisar" id="btn-revisar-copy" onclick="copyRevisar()">Copiar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="search-overlay" id="search-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box">
+    <input id="search-input" placeholder="Pular para seção... (ex: mitral, psap, aorta, strain)" oninput="renderSearch()" onkeydown="searchKey(event)" autocomplete="off">
+    <div class="search-results" id="search-results"></div>
+    <div class="search-hint"><span>↑↓ navegar</span><span>↵ ir</span><span>esc fechar</span></div>
   </div>
 </div>
 

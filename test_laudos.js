@@ -121,6 +121,27 @@ has('Item 9 Achados adicionais (esquerda)', 'Achados adicionais: derrame pleural
 hasNot('Item 9 não usa mais "Achado extracardíaco"', 'Achado extracardíaco: derrame pleural');
 doc.getElementById('achado-pleural-e').checked = false;
 
+// ── GLS: strain longitudinal global ─────────────────────────
+setNum('ve-gls', '-16');
+has('GLS corpo do VE (-16)', 'Strain longitudinal global de -16%.');
+has('GLS reduzido na conclusão', 'Strain longitudinal global reduzido -16% (valor de referência: < -17%).');
+setNum('ve-gls', '14'); // técnica digita sem sinal -> normaliza pra negativo
+has('GLS normaliza sinal (14 -> -14%)', 'Strain longitudinal global de -14%.');
+setNum('ve-gls', '-20'); // normal: mais negativo que -17
+has('GLS normal aparece no corpo (-20)', 'Strain longitudinal global de -20%.');
+hasNot('GLS normal não vai pra conclusão', 'Strain longitudinal global reduzido');
+setNum('ve-gls', '-17'); // limite: -17 é normal, não reduzido
+hasNot('GLS -17 não é reduzido', 'Strain longitudinal global reduzido');
+setNum('ve-gls', '');
+
+// ── Revisar: textarea carrega exatamente o laudo gerado ─────
+window.openRevisar();
+const revVal = doc.getElementById('revisar-text').value;
+const okRev = revVal === window.buildPlainReport();
+console.log(`${okRev ? 'PASS' : 'FAIL'}  Revisar carrega o laudo gerado`);
+okRev ? pass++ : fail++;
+window.closeRevisar();
+
 // ── Correção ERP (regressão da sessão anterior) ─────────────
 doc.getElementById('pac-sexo').value = 'M';
 doc.getElementById('m-massa').value = '217';
@@ -130,6 +151,41 @@ const veEsp = (doc.querySelector('input[name="ve-esp"]:checked') || {}).value;
 const okErp = veEsp === 'hve-concentrica-imp';
 console.log(`${okErp ? 'PASS' : 'FAIL'}  ERP 0,60 + massa 217 -> concêntrica importante (obtido=${veEsp})`);
 okErp ? pass++ : fail++;
+
+// ── Plausibilidade (aviso âmbar, não bloqueia) ──────────────
+setNum('m-siv', '40'); window.checkPlausibility();
+const sivBad = doc.getElementById('m-siv').closest('.fld').classList.contains('fld-implausible');
+console.log(`${sivBad ? 'PASS' : 'FAIL'}  Plausibilidade: septo 40mm marca aviso`);
+sivBad ? pass++ : fail++;
+setNum('m-siv', '10'); window.checkPlausibility();
+const sivOk = !doc.getElementById('m-siv').closest('.fld').classList.contains('fld-implausible');
+console.log(`${sivOk ? 'PASS' : 'FAIL'}  Plausibilidade: septo 10mm sem aviso`);
+sivOk ? pass++ : fail++;
+setNum('m-siv', ''); window.checkPlausibility();
+
+// ── Busca rápida ────────────────────────────────────────────
+doc.getElementById('search-input').value = 'mitral';
+const okSearch = window.searchResults().map(x => x.id).includes('vm');
+console.log(`${okSearch ? 'PASS' : 'FAIL'}  Busca: "mitral" acha a valva mitral`);
+okSearch ? pass++ : fail++;
+doc.getElementById('search-input').value = '';
+
+// ── Autosave: snapshot/restore preserva o laudo ─────────────
+// estado realista: medidas-fonte reais -> massa/ERP derivados por calcAll
+doc.getElementById('pac-sexo').value = 'M';
+setNum('m-siv', '11'); setNum('m-pp', '11'); setNum('m-ved', '50'); window.calcAll();
+doc.getElementById('pac-indic').value = 'IC';
+window.setMode('va', 'alterado'); selRadio('va-est', 'Estenose importante'); setNum('va-vmax', '4'); setNum('va-grad', '38');
+const snapBefore = window.buildPlainReport();
+const snap = window.buildSnapshot();
+// bagunça antes de restaurar
+window.setMode('va', 'normal'); setNum('va-vmax', ''); setNum('va-grad', ''); setNum('m-siv', ''); setNum('m-ved', ''); window.calcAll();
+doc.getElementById('pac-indic').value = '';
+window.applySnapshot(snap);
+const snapAfter = window.buildPlainReport();
+const okSnap = snapBefore === snapAfter;
+console.log(`${okSnap ? 'PASS' : 'FAIL'}  Autosave: snapshot/restore preserva o laudo`);
+okSnap ? pass++ : fail++;
 
 console.log(`\n${pass} passaram, ${fail} falharam`);
 process.exit(fail ? 1 : 0);

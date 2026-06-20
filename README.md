@@ -183,6 +183,40 @@ Abre em `http://localhost:8788`.
 
 ## O que tem nessa versão
 
+**Novidades V9 (20/06/2026 — pacote de UX + GLS, aprovado pela Dra.):**
+
+*Strain longitudinal global (GLS):*
+- Campo opcional na seção Ventrículo Esquerdo (ao lado da FEVE). Sai no corpo como **"Strain longitudinal global de -X%."** sempre que preenchido.
+- O app **normaliza o sinal**: se a técnica digitar `16` sem o menos, sai "-16%".
+- Sugere "reduzido" na conclusão quando o GLS é **menos negativo que -17%** (|GLS| < 17): **"Strain longitudinal global reduzido -X% (valor de referência: < -17%)."** A -17% ou mais negativo = normal. Ela sobrescreve quando quiser (igual geometria/diastólica).
+
+*Modo revisão (editável):*
+- Botão **"📝 Revisar"** no topo do preview abre o laudo completo num campo editável em fonte grande (18px) para a conferência final da Dra.
+- **Mantém as edições** durante o laudo; botão **"↻ Regenerar"** recarrega do formulário se a técnica mudar algum campo.
+- "Copiar" leva o texto já com as edições e registra nas estatísticas. As edições **não** voltam para os campos do formulário.
+
+*Autosave / recuperação:*
+- O rascunho é salvo localmente a cada mudança (sem nome de paciente — só indicação e achados). Ao reabrir, oferece **"Recuperar laudo em andamento?"**.
+- **Limpa automaticamente ao copiar** o laudo e ao iniciar um **Novo**.
+
+*Busca rápida:*
+- Atalho **`/`** abre uma busca para pular para qualquer seção pelo nome ou sinônimo (ex.: "mitral", "psap", "strain"). Navegação por setas + Enter.
+
+*Plausibilidade (anti-erro de transcrição):*
+- Campos numéricos ganham **borda âmbar + dica** quando o valor sai da faixa fisiológica possível (ex.: septo 40mm, VEd 250mm). Apenas avisa, **não bloqueia**.
+
+*Referência para a técnica (não sai no laudo):*
+- Hint inline no TAPSE / onda S' (< 17mm · < 9,5 cm/s = disfunção sistólica do VD).
+
+*Detalhe:*
+- O confirm do botão "✓ Tudo normal" passou a dizer **"Aplicar tudo normal? Isto apaga o que já foi preenchido."** (antes mostrava a mensagem de "novo laudo").
+
+*Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **30 cenários**) cobrindo o GLS (corte, sinal, conclusão), a equivalência do modo revisão, a plausibilidade, a busca e o round-trip do autosave, com confirmação de que o laudo normal padrão continua **byte a byte idêntico**.
+
+---
+
+## Versões anteriores
+
 **Novidades V8 (20/06/2026 — rodada de 17 laudos da Santa Casa, aprovadas pela Dra.):**
 
 *Correção de bug (geometria do VE):*
@@ -220,8 +254,6 @@ Abre em `http://localhost:8788`.
 *Validação:* `node --check` + suíte jsdom (`test_laudos.js`, 19 cenários) cobrindo cada item novo e a correção do ERP, com confirmação de que o laudo normal padrão sai **byte a byte idêntico** ao anterior.
 
 ---
-
-## Versões anteriores
 
 **Novidades V7 (03/06/2026 — aprovadas pela Dra.):**
 

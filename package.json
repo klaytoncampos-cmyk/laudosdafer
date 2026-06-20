@@ -9,6 +9,7 @@
     "dev": "wrangler pages dev . --d1=DB=laudosdafer-db"
   },
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "wrangler": "^3.0.0"
   }
 }

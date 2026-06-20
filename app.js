@@ -71,6 +71,8 @@ async function showApp() {
   applyCollapse();
   applyVmEstenose();
   state.startTime = Date.now();
+  try { baselineReport = buildPlainReport(); } catch (e) { baselineReport = null; }
+  maybeRestoreAutosave();
 }
 document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 (async () => { if (await api.check()) showApp(); })();
@@ -90,7 +92,8 @@ const state = {
   eteTipo: 'transesofagica',
   compact: true,
   secOpen: {},
-  activeSec: null
+  activeSec: null,
+  reviewText: null
 };
 
 function setTipo(t) {
@@ -279,6 +282,7 @@ function syncIndicFromHeader(v) {
 // ════════════════════════════════════════
 function num(id) { const v = parseFloat(String(document.getElementById(id).value).replace(',', '.')); return isNaN(v) ? null : v; }
 function fmt(n, d=2) { return n===null ? '' : Number(n).toFixed(d).replace('.', ','); }
+function fmtGls(v) { const a = Math.abs(Number(v)); const s = Number.isInteger(a) ? String(a) : a.toFixed(1).replace('.', ','); return '-' + s + '%'; }
 function getRadio(name) { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : null; }
 function getChecks(name) { return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(e=>e.value); }
 function getChecksGrid(id) { return Array.from(document.querySelectorAll(`#${id} input[type="checkbox"]:checked`)).map(e=>e.value); }
@@ -405,6 +409,7 @@ document.addEventListener('input', () => {
   updateStatuses();
   updateNav();
   updateStickyHeader();
+  if (typeof checkPlausibility === 'function') checkPlausibility();
 });
 
 // ════════════════════════════════════════
@@ -1046,6 +1051,13 @@ function genReport() {
   veLines.push(sistLine);
   if (veSist !== 'preservada' || veMot !== 'preservada') altered.push('ve-sist');
 
+  // Strain longitudinal global (GLS) — sempre no corpo quando preenchido; reduzido se menos negativo que -17%
+  const veGls = num('ve-gls');
+  if (veGls !== null) {
+    veLines.push(`Strain longitudinal global de ${fmtGls(veGls)}.`);
+    if (Math.abs(veGls) < 17) altered.push('ve-gls');
+  }
+
   const diastMap = {
     'normal':'Função diastólica normal.',
     'grau-1':'Disfunção diastólica grau I.',
@@ -1603,6 +1615,10 @@ function genAutoConcl(altered) {
     const feve = num('ve-feve');
     lines.push(map[veSist] + (feve ? ` (FEVE= ${feve}%)` : ''));
   }
+  const veGlsC = num('ve-gls');
+  if (veGlsC !== null && Math.abs(veGlsC) < 17) {
+    lines.push(`Strain longitudinal global reduzido ${fmtGls(veGlsC)} (valor de referência: < -17%)`);
+  }
   if (veDiast && veDiast !== 'normal' && veDiast !== 'indet' && veDiast !== 'na-mp' && veDiast !== 'na-valv' && veDiast !== 'na-arr') {
     const map = { 'grau-1':'Disfunção diastólica grau I', 'grau-2':'Disfunção diastólica grau II', 'grau-3':'Disfunção diastólica grau III' };
     lines.push(map[veDiast]);
@@ -2018,6 +2034,7 @@ function buildPlainReport() {
 async function copyReport() {
   const txt = buildPlainReport();
   await navigator.clipboard.writeText(txt);
+  if (typeof clearAutosave === 'function') clearAutosave();
   const btn = document.getElementById('btn-copy');
   btn.classList.add('copied');
   btn.innerHTML = '✓ Copiado!';
@@ -2039,14 +2056,16 @@ async function copyReport() {
   }, 2000);
 }
 
-function resetAll() {
-  if (!confirm('Limpar tudo e começar novo laudo?')) return;
+function resetAll(confirmMsg) {
+  if (!confirm(confirmMsg || 'Limpar tudo e começar novo laudo?')) return false;
+  if (typeof clearAutosave === 'function') clearAutosave();
   document.querySelectorAll('input[type="number"], input[type="text"], textarea').forEach(i => i.value = '');
   document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(i => i.checked = false);
   document.querySelectorAll('.opt-chip.sel, .opt-chip.auto').forEach(c => c.classList.remove('sel', 'auto'));
   state.bullseye = {};
   state.bullseyeActiveState = 'hipocinesia';
   state.manualOverride = {};
+  state.reviewText = null;
   state.compact = true;
   state.secOpen = {};
   state.activeSec = null;
@@ -2117,9 +2136,12 @@ function resetAll() {
   updateStickyHeader();
   applyVmEstenose();
   applyCollapse();
+  return true;
 }
 
-function aplicarTudoNormal() { resetAll(); document.getElementById('preview-meta').textContent = 'tudo normal aplicado'; }
+function aplicarTudoNormal() {
+  if (resetAll('Aplicar "tudo normal"? Isto apaga o que já foi preenchido.')) document.getElementById('preview-meta').textContent = 'tudo normal aplicado';
+}
 
 // ════════════════════════════════════════
 // TEMPLATES
@@ -2283,3 +2305,263 @@ document.addEventListener('change', e => {
   fp.addEventListener('focusin', pick);
   fp.addEventListener('click', pick);
 })();
+
+// ════════════════════════════════════════
+// MODO REVISÃO (editável) — V10
+// Abre o laudo num textarea grande pra conferência/edição final da Dra.
+// Mantém as edições durante o laudo; "Regenerar" recarrega do formulário.
+// ════════════════════════════════════════
+function openRevisar() {
+  const ta = document.getElementById('revisar-text');
+  if (state.reviewText == null) state.reviewText = buildPlainReport();
+  ta.value = state.reviewText;
+  document.getElementById('modal-revisar').classList.add('shown');
+  ta.focus();
+}
+function closeRevisar() { document.getElementById('modal-revisar').classList.remove('shown'); }
+function onRevisarEdit() {
+  state.reviewText = document.getElementById('revisar-text').value;
+  if (typeof scheduleAutosave === 'function') scheduleAutosave();
+}
+function regenerarRevisar() {
+  state.reviewText = buildPlainReport();
+  document.getElementById('revisar-text').value = state.reviewText;
+  const h = document.getElementById('revisar-hint');
+  if (h) { h.textContent = '↻ Regenerado a partir do formulário.'; setTimeout(() => { h.textContent = 'Edite à vontade. "Copiar" leva o texto já com suas edições.'; }, 1800); }
+  if (typeof scheduleAutosave === 'function') scheduleAutosave();
+}
+async function copyRevisar() {
+  const txt = document.getElementById('revisar-text').value;
+  await navigator.clipboard.writeText(txt);
+  const btn = document.getElementById('btn-revisar-copy');
+  btn.textContent = '✓ Copiado!';
+  try {
+    const R = genReport();
+    const feve = num('ve-feve');
+    const psap = parseFloat((document.getElementById('vt-psap').value || '0').replace(',', '.')) || null;
+    const altered = !R.conclusao.includes('parâmetros da normalidade');
+    api.logLaudo({ tipo: state.tipo, alterado: altered, duracao_ms: Date.now() - state.startTime, feve, psap }).catch(() => {});
+    state.startTime = Date.now();
+  } catch (e) {}
+  if (typeof clearAutosave === 'function') clearAutosave();
+  setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+}
+
+// ════════════════════════════════════════
+// PLAUSIBILIDADE — V10 (aviso âmbar, não bloqueia)
+// Pega erro grosseiro de transcrição (ex.: septo 40mm, VEd 250mm).
+// ════════════════════════════════════════
+const PLAUSIBLE = {
+  'm-aoraiz': [10, 60, 'Raiz da aorta (mm)'],
+  'm-aoasc':  [10, 70, 'Aorta ascendente (mm)'],
+  'm-ae':     [15, 80, 'Átrio esquerdo (mm)'],
+  'm-ved':    [25, 90, 'VE diástole (mm)'],
+  'm-ves':    [12, 80, 'VE sístole (mm)'],
+  'm-siv':    [4, 30, 'Septo (mm)'],
+  'm-pp':     [4, 30, 'Parede posterior (mm)'],
+  've-feve':  [5, 85, 'FEVE (%)'],
+  'vd-tapse': [5, 35, 'TAPSE (mm)'],
+  'vci-mm':   [3, 40, 'VCI (mm)']
+};
+function checkPlausibility() {
+  Object.keys(PLAUSIBLE).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const fld = el.closest('.fld');
+    const [lo, hi, label] = PLAUSIBLE[id];
+    const v = num(id);
+    const bad = v !== null && (v < lo || v > hi);
+    if (fld) fld.classList.toggle('fld-implausible', bad);
+    el.title = bad ? `Valor fora da faixa esperada — ${label}: ${lo} a ${hi}. Confira a digitação.` : '';
+  });
+  const g = document.getElementById('ve-gls');
+  if (g) {
+    const gv = num('ve-gls');
+    const gbad = gv !== null && (Math.abs(gv) < 5 || Math.abs(gv) > 30);
+    const gfld = g.closest('.fld');
+    if (gfld) gfld.classList.toggle('fld-implausible', gbad);
+    g.title = gbad ? 'GLS fora da faixa usual (5 a 30% em módulo). Confira a digitação.' : '';
+  }
+}
+
+// ════════════════════════════════════════
+// BUSCA RÁPIDA — V10 (atalho "/")
+// Pula pra qualquer seção pelo nome/sinônimo durante o ditado.
+// ════════════════════════════════════════
+const SEARCH_SYN = {
+  paciente: 'identificacao indicacao sexo ritmo fc peso altura beira leito uti',
+  estrut: 'dados estruturais medidas massa erp aorta raiz ae ved siv parede bsa',
+  aorta: 'aorta toracica raiz ascendente dilatacao ectasia ateromatose',
+  ae: 'atrio esquerdo volume',
+  ve: 'ventriculo esquerdo feve gls strain diastolica motilidade segmentar hve hipertrofia contraste',
+  ad: 'atrio direito',
+  vd: 'ventriculo direito tapse onda s sobrecarga trombo',
+  vm: 'valva mitral refluxo estenose protese wilkins calcificacao anel',
+  va: 'valva aortica refluxo estenose protese tavi bicuspide veloc max indice doppler',
+  vt: 'valva tricuspide refluxo',
+  vp: 'valva pulmonar psap hipertensao pulmonar',
+  peri: 'pericardio derrame',
+  septo: 'septos fop forame oval cia civ microbolhas interatrial massa',
+  vci: 'veia cava inferior',
+  ete: 'transesofagico ete apendice trombo vegetacao',
+  eteiso: 'ete isolado transesofagico',
+  concl: 'conclusao recomendacoes'
+};
+let SEARCH_INDEX = null;
+let searchActive = 0;
+function deburr(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function buildSearchIndex() {
+  SEARCH_INDEX = [];
+  document.querySelectorAll('.section[data-id]').forEach(sec => {
+    const id = sec.dataset.id;
+    const title = (sec.querySelector('.sec-title')?.textContent || '').trim();
+    const n = (sec.querySelector('.sec-num')?.textContent || '').trim();
+    SEARCH_INDEX.push({ id, title, n, kw: deburr(title + ' ' + (SEARCH_SYN[id] || '')) });
+  });
+}
+function searchResults() {
+  if (!SEARCH_INDEX) buildSearchIndex();
+  const q = deburr((document.getElementById('search-input')?.value || '').trim());
+  return SEARCH_INDEX.filter(it => {
+    const card = document.getElementById('sec-' + it.id);
+    if (!card || card.style.display === 'none') return false;
+    return q === '' || it.kw.includes(q);
+  });
+}
+function renderSearch() {
+  const box = document.getElementById('search-results');
+  if (!box) return;
+  const res = searchResults();
+  if (searchActive >= res.length) searchActive = 0;
+  box.innerHTML = res.map((it, i) =>
+    `<div class="search-item${i === searchActive ? ' active' : ''}" data-id="${it.id}" onclick="jumpToSection('${it.id}')"><span class="si-num">${it.n}</span>${it.title}</div>`
+  ).join('') || '<div class="search-item" style="cursor:default;color:var(--muted)">Nada encontrado</div>';
+}
+function openSearch() {
+  const ov = document.getElementById('search-overlay');
+  if (!ov) return;
+  searchActive = 0;
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  ov.classList.add('shown');
+  renderSearch();
+  if (inp) inp.focus();
+}
+function closeSearch() { const ov = document.getElementById('search-overlay'); if (ov) ov.classList.remove('shown'); }
+function searchKey(e) {
+  const res = searchResults();
+  if (e.key === 'ArrowDown') { e.preventDefault(); searchActive = Math.min(searchActive + 1, res.length - 1); renderSearch(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); searchActive = Math.max(searchActive - 1, 0); renderSearch(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (res[searchActive]) jumpToSection(res[searchActive].id); }
+  else if (e.key === 'Escape') { e.preventDefault(); closeSearch(); }
+}
+function jumpToSection(id) {
+  closeSearch();
+  const card = document.getElementById('sec-' + id);
+  if (!card) return;
+  state.secOpen[id] = true;
+  applyCollapse();
+  if (typeof setActiveSec === 'function') setActiveSec(id);
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.addEventListener('keydown', e => {
+  const appShown = document.getElementById('app')?.classList.contains('shown');
+  if (!appShown) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(tag) && !document.querySelector('.modal-overlay.shown')) {
+    e.preventDefault();
+    openSearch();
+  } else if (e.key === 'Escape' && document.getElementById('search-overlay')?.classList.contains('shown')) {
+    closeSearch();
+  }
+});
+
+// ════════════════════════════════════════
+// AUTOSAVE — V10 (salva local; limpa ao copiar/Novo)
+// Sem dados de paciente além da indicação clínica.
+// ════════════════════════════════════════
+const AUTOSAVE_KEY = 'laudosdafer:autosave:v1';
+let autosaveTimer = null;
+let baselineReport = null;
+function autosaveDirty() {
+  const indic = (document.getElementById('pac-indic')?.value || '').trim();
+  if (indic) return true;
+  if (state.reviewText) return true;
+  if (Object.keys(state.bullseye || {}).length) return true;
+  if (baselineReport === null) return false;
+  try { return buildPlainReport() !== baselineReport; } catch (e) { return false; }
+}
+function escSel(v) { return String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"'); }
+function buildSnapshot() {
+  const snap = { ids: {}, radios: {}, checks: [], mode: Object.assign({}, state.mode), concl: state.concl, tipo: state.tipo, eteTipo: state.eteTipo, bullseye: Object.assign({}, state.bullseye), bullseyeActiveState: state.bullseyeActiveState, manualOverride: Object.assign({}, state.manualOverride), reviewText: state.reviewText };
+  document.querySelectorAll('#app input, #app select, #app textarea').forEach(el => {
+    if (el.closest('#modal-frases') || el.closest('#modal-stats') || el.closest('#modal-revisar') || el.closest('#search-overlay') || el.id === 'pwd') return;
+    if (el.type === 'radio') { if (el.checked && el.name) snap.radios[el.name] = el.value; }
+    else if (el.type === 'checkbox') { if (el.checked) snap.checks.push(el.id ? '#' + el.id : (el.name || '') + '::' + el.value); }
+    else if (el.id) { snap.ids[el.id] = el.value; }
+  });
+  return snap;
+}
+function saveAutosave() { try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildSnapshot())); } catch (e) {} }
+function clearAutosave() { try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {} }
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => { if (autosaveDirty()) saveAutosave(); else clearAutosave(); }, 600);
+}
+function applySnapshot(snap) {
+  Object.keys(snap.ids || {}).forEach(id => { const el = document.getElementById(id); if (el) el.value = snap.ids[id]; });
+  document.querySelectorAll('#app input[type="radio"], #app input[type="checkbox"]').forEach(el => {
+    if (!el.closest('#modal-frases') && !el.closest('#modal-stats')) el.checked = false;
+  });
+  Object.keys(snap.radios || {}).forEach(name => { const r = document.querySelector(`input[name="${escSel(name)}"][value="${escSel(snap.radios[name])}"]`); if (r) r.checked = true; });
+  (snap.checks || []).forEach(key => {
+    let el;
+    if (key[0] === '#') el = document.getElementById(key.slice(1));
+    else { const i = key.indexOf('::'); el = document.querySelector(`input[name="${escSel(key.slice(0, i))}"][value="${escSel(key.slice(i + 2))}"]`); }
+    if (el) el.checked = true;
+  });
+  state.mode = Object.assign({ aorta: 'auto', ae: 'auto', vci: 'incluir' }, snap.mode || {});
+  state.concl = snap.concl || 'auto';
+  state.tipo = snap.tipo || 'ETT';
+  state.eteTipo = snap.eteTipo || 'transesofagica';
+  state.bullseye = snap.bullseye || {};
+  state.bullseyeActiveState = snap.bullseyeActiveState || 'hipocinesia';
+  state.manualOverride = snap.manualOverride || {};
+  state.reviewText = snap.reviewText || null;
+  setTipo(state.tipo);
+  if (typeof setEteTipo === 'function') setEteTipo(state.eteTipo);
+  Object.keys(state.mode).forEach(sec => setMode(sec, state.mode[sec]));
+  setConclMode(state.concl);
+  if (typeof onMotilidadeChange === 'function') onMotilidadeChange();
+  if (typeof onPeriChange === 'function') onPeriChange();
+  const vpAlt = document.getElementById('vp-alt-body'); if (vpAlt) vpAlt.style.display = getRadio('vp-base') === 'alterada' ? 'block' : 'none';
+  [['vm-img-chk', 'vm-img-row'], ['vm-veg-chk', 'vm-veg-row'], ['vm-cusp-chk', 'vm-cusp-row'], ['va-veg-chk', 'va-veg-row'], ['eteiso-trombo', 'eteiso-trombo-row'], ['pac-beira', 'uti-context']].forEach(pair => {
+    const c = document.getElementById(pair[0]), r = document.getElementById(pair[1]);
+    if (c && r) r.style.display = c.checked ? 'block' : 'none';
+  });
+  document.querySelectorAll('.opt-chip').forEach(chip => { const inp = chip.querySelector('input'); if (inp && (inp.type === 'radio' || inp.type === 'checkbox')) chip.classList.toggle('sel', inp.checked); });
+  if (typeof refreshBullseye === 'function') refreshBullseye();
+  calcAll();
+  if (typeof checkPlausibility === 'function') checkPlausibility();
+  renderContextualSuggestions();
+  renderPreview();
+  updateStatuses();
+  updateNav();
+  updateStickyHeader();
+  applyCollapse();
+  if (typeof applyVmEstenose === 'function') applyVmEstenose();
+}
+function maybeRestoreAutosave() {
+  let raw;
+  try { raw = localStorage.getItem(AUTOSAVE_KEY); } catch (e) { return; }
+  if (!raw) return;
+  let snap;
+  try { snap = JSON.parse(raw); } catch (e) { clearAutosave(); return; }
+  if (confirm('Recuperar o laudo em andamento (não finalizado)?')) {
+    try { applySnapshot(snap); } catch (e) { clearAutosave(); }
+  } else {
+    clearAutosave();
+  }
+}
+document.addEventListener('input', scheduleAutosave);
+document.addEventListener('change', scheduleAutosave);
