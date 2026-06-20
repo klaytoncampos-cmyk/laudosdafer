@@ -183,6 +183,46 @@ Abre em `http://localhost:8788`.
 
 ## O que tem nessa versão
 
+**Novidades V8 (20/06/2026 — rodada de 17 laudos da Santa Casa, aprovadas pela Dra.):**
+
+*Correção de bug (geometria do VE):*
+- A função `num()` lia campos com vírgula decimal via `parseFloat("0,60")`, que retorna `0`. Isso fazia o ERP ser lido como 0 e o app sugerir **HVE excêntrica** onde deveria ser **concêntrica**. Corrigido com `.replace(',', '.')` antes do parse — vale para o ERP e qualquer campo decimal relido.
+
+*Septos / forame oval (redação alinhada à Dra.):*
+- FOP positivo: "Shunt pelo septo interatrial, esquerda-direita, sugestivo de forame oval patente."
+- Microbolhas negativa: "Infusão de solução salina agitada evidenciou opacificação adequada das cavidades direitas, sem o surgimento de microbolhas nas cavidades esquerdas em repouso. Ausência de evidência ecocardiográfica de comunicação interatrial (shunt direita-esquerda)."
+
+*Valva aórtica (estenose):*
+- Campo **Índice Doppler** (DVI) → "Índice Doppler: X,XX".
+- Velocidade máxima renomeada para o termo da Dra.: **"Veloc máx.: X,Xm/s"** (1 decimal). Gradiente médio já existia.
+- *Não* incluída a frase "Análise morfológica prejudicada pela intensa calcificação valvar" (decisão da Dra.).
+
+*Valva mitral:*
+- Calcificação do anel com a redação exata dela: **"Calcificação do anel posterior"** e **"Calcificação discreta do anel"**.
+
+*Ventrículo direito (casos de TEP / sobrecarga):*
+- Observação **"Septo interventricular retificado e com movimento paradoxal, sugestivo de sobrecarga de pressão no ventrículo direito."**
+- Observação **trombo apical**: "Imagem ecogênica e homogênea, aderida à região apical, sugestiva de trombo." (dimensão pode ser ajustada à mão).
+
+*Ventrículo esquerdo:*
+- Campo **Grad. dinâmico VSVE** (opcional) → "Gradiente dinâmico na via de saída do ventrículo esquerdo de X mmHg (estado hiperdinâmico)."
+
+*Ritmo:*
+- Novas opções **"FAAR"** e **"Regular e taquicárdico"**. A FC opcional "(FC: X bpm)" já existia.
+
+*Achados adicionais:*
+- O derrame pleural passou do rótulo "Achado extracardíaco:" para **"Achados adicionais:"** (mantendo a lateralidade esquerda/direita/bilateral).
+
+*Avaliados e mantidos como estão (decisão da Dra.):*
+- Geometria do VE continua como **sugestão automática** que ela sobrescreve quando o quadro clínico pede (ela classifica clinicamente, nem sempre seguindo a tabela massa+ERP). Não adicionado o modificador "e simétrica" na hipertrofia.
+- Contratilidade segmentar e FC opcional **já estavam prontas** na produção — não precisaram de mudança.
+
+*Validação:* `node --check` + suíte jsdom (`test_laudos.js`, 19 cenários) cobrindo cada item novo e a correção do ERP, com confirmação de que o laudo normal padrão sai **byte a byte idêntico** ao anterior.
+
+---
+
+## Versões anteriores
+
 **Novidades V7 (03/06/2026 — aprovadas pela Dra.):**
 
 *Causa/etiologia do refluxo (seletor opcional, como já havia na tricúspide):*
@@ -201,8 +241,6 @@ Abre em `http://localhost:8788`.
 - Quando o átrio esquerdo e o direito estão aumentados com o **mesmo grau**, a conclusão junta em "Aumento [grau] biatrial". Graus diferentes continuam separados.
 
 ---
-
-## Versões anteriores
 
 **Novidades V6 (01/06/2026):**
 
