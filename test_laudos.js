@@ -175,6 +175,21 @@ okR ? pass++ : fail++;
 ['m-massa','m-erp','m-siv','m-pp'].forEach(id => doc.getElementById(id).value = '');
 doc.getElementById('pac-sexo').value = '';
 
+// ── Hipocinesia difusa quando FEVE reduzida (frase da Dra., opção C) ──
+doc.getElementById('pac-sexo').value = 'F';
+setNum('ve-feve', '23'); doc.getElementById('ve-feve-met').value = 'Simpson';
+window.autoFillFromMeasures();
+const sistVal = (doc.querySelector('input[name="ve-sist"]:checked') || {}).value;
+console.log(`${sistVal === 'imp-reduzida' ? 'PASS' : 'FAIL'}  FEVE 23% -> função sistólica importante (obtido=${sistVal})`);
+sistVal === 'imp-reduzida' ? pass++ : fail++;
+const motVal = (doc.querySelector('input[name="ve-mot"]:checked') || {}).value;
+console.log(`${motVal === 'alterada' ? 'PASS' : 'FAIL'}  FEVE 23% -> motilidade auto "alterada" (obtido=${motVal})`);
+motVal === 'alterada' ? pass++ : fail++;
+has('Hipocinesia difusa (frase da Dra.)', 'Hipocinesia difusa. Disfunção sistólica importante (FEVE= 23% pelo método de Simpson).');
+hasNot('Não usa mais "segmentar preservada" com FEVE baixa', 'Contratilidade miocárdica segmentar preservada e função sistólica importante reduzida');
+setNum('ve-feve', ''); selRadio('ve-mot', 'preservada'); window.onMotilidadeChange();
+doc.getElementById('pac-sexo').value = '';
+
 // ── Plausibilidade (aviso âmbar, não bloqueia) ──────────────
 setNum('m-siv', '40'); window.checkPlausibility();
 const sivBad = doc.getElementById('m-siv').closest('.fld').classList.contains('fld-implausible');

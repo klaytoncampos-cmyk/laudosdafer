@@ -525,6 +525,12 @@ function autoFillFromMeasures() {
       else sistAuto = 'imp-reduzida';
     }
     autoSelect('ve-sist', sistAuto);
+    // FEVE alterada → motilidade "Alterada" (pedido da Dra.); fica difusa se nenhum segmento for marcado.
+    if (!state.manualOverride['ve-mot']) {
+      if (sistAuto !== 'preservada') autoSelect('ve-mot', 'alterada');
+      else if (!Object.keys(state.bullseye).length) autoSelect('ve-mot', 'preservada');
+      onMotilidadeChange();
+    }
   }
   document.getElementById('ve-feve').closest('.fld').classList.toggle('fld-crit', feve !== null && feve < 30);
   const psap = parseFloat((document.getElementById('vt-psap').value || '0').replace(',', '.'));
@@ -1045,14 +1051,15 @@ function genReport() {
       sistLine += veSist === 'preservada' ? `, estimada em ${veFeve}% ${metPart}` : ` (FEVE= ${veFeve}% ${metPart})`;
     }
     sistLine += '.';
+  } else if (veSist === 'preservada') {
+    sistLine = 'Contratilidade miocárdica segmentar e função sistólica preservadas';
+    if (veFeve !== null) sistLine += ` (FEVE= ${veFeve}% ${metPart})`;
+    sistLine += '.';
   } else {
-    const map = {
-      'preservada':'Contratilidade miocárdica segmentar e função sistólica preservadas',
-      'disc-reduzida':'Contratilidade miocárdica segmentar preservada e função sistólica discretamente reduzida',
-      'mod-reduzida':'Contratilidade miocárdica segmentar preservada e função sistólica moderadamente reduzida',
-      'imp-reduzida':'Contratilidade miocárdica segmentar preservada e função sistólica importante reduzida'
-    };
-    sistLine = map[veSist];
+    // Disfunção global sem déficit segmentar marcado → hipocinesia difusa (frase da Dra.).
+    // FEVE reduzida implica contração anormal (regional OU difusa); sem segmentos = difusa.
+    const grauWord = { 'disc-reduzida':'discreta', 'mod-reduzida':'moderada', 'imp-reduzida':'importante' }[veSist];
+    sistLine = `Hipocinesia difusa. Disfunção sistólica ${grauWord}`;
     if (veFeve !== null) sistLine += ` (FEVE= ${veFeve}% ${metPart})`;
     sistLine += '.';
   }
