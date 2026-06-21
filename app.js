@@ -442,7 +442,7 @@ function calcAll() {
     calcInfo.style.display = 'grid';
     const refMassa = sexo === 'F' ? 95 : 115;
     const massaAlta = massaInd > refMassa;
-    const erpAlto = erp > 0.42;
+    const erpAlto = erp >= 0.42;
     let padrao;
     if (!massaAlta && !erpAlto) padrao = 'Normal';
     else if (!massaAlta && erpAlto) padrao = 'Remodelamento concêntrico';
@@ -490,15 +490,23 @@ function autoFillFromMeasures() {
   if (massaInd !== null && erp !== null && sexo && !state.manualOverride['ve-esp']) {
     const refMassa = sexo === 'F' ? 95 : 115;
     const massaAlta = massaInd > refMassa;
-    const erpAlto = erp > 0.42;
+    const erpAlto = erp >= 0.42;
     let espAuto;
     if (!massaAlta && !erpAlto) espAuto = 'preservada';
     else if (!massaAlta && erpAlto) espAuto = 'remodelamento';
     else if (massaAlta && erpAlto) {
-      const delta = massaInd - refMassa;
-      if (delta <= 15) espAuto = 'hve-concentrica-disc';
-      else if (delta <= 30) espAuto = 'hve-concentrica-mod';
-      else espAuto = 'hve-concentrica-imp';
+      // Grau da HVE concêntrica pela MAIOR espessura de parede (septo ou PP),
+      // em faixas por sexo — protocolo da Dra. (≤12/13 disc · 13-15/14-16 mod · ≥16/17 imp).
+      const maxParede = Math.max(num('m-siv') || 0, num('m-pp') || 0);
+      if (sexo === 'F') {
+        if (maxParede <= 12) espAuto = 'hve-concentrica-disc';
+        else if (maxParede <= 15) espAuto = 'hve-concentrica-mod';
+        else espAuto = 'hve-concentrica-imp';
+      } else {
+        if (maxParede <= 13) espAuto = 'hve-concentrica-disc';
+        else if (maxParede <= 16) espAuto = 'hve-concentrica-mod';
+        else espAuto = 'hve-concentrica-imp';
+      }
     } else espAuto = 'hve-excentrica';
     autoSelect('ve-esp', espAuto);
   }

@@ -142,15 +142,38 @@ console.log(`${okRev ? 'PASS' : 'FAIL'}  Revisar carrega o laudo gerado`);
 okRev ? pass++ : fail++;
 window.closeRevisar();
 
-// ── Correção ERP (regressão da sessão anterior) ─────────────
+// ── ERP com vírgula (regressão) + grau da HVE pela espessura de parede (protocolo da Dra.) ──
 doc.getElementById('pac-sexo').value = 'M';
-doc.getElementById('m-massa').value = '217';
-doc.getElementById('m-erp').value = window.fmt(0.60, 2); // "0,60"
+doc.getElementById('m-massa').value = '217';                  // massa alta
+doc.getElementById('m-erp').value = window.fmt(0.60, 2);      // "0,60" — lê a vírgula, não cai pra excêntrica
+doc.getElementById('m-siv').value = '18'; doc.getElementById('m-pp').value = '18'; // maior parede 18mm
 window.autoFillFromMeasures();
-const veEsp = (doc.querySelector('input[name="ve-esp"]:checked') || {}).value;
-const okErp = veEsp === 'hve-concentrica-imp';
-console.log(`${okErp ? 'PASS' : 'FAIL'}  ERP 0,60 + massa 217 -> concêntrica importante (obtido=${veEsp})`);
+const veEspH = (doc.querySelector('input[name="ve-esp"]:checked') || {}).value;
+const okErp = veEspH === 'hve-concentrica-imp';
+console.log(`${okErp ? 'PASS' : 'FAIL'}  ERP 0,60 (vírgula) + parede 18mm (H) -> concêntrica importante (obtido=${veEspH})`);
 okErp ? pass++ : fail++;
+
+// caso real que a Dra. apontou: mulher, parede 12mm, massa 142, ERP 0,46 -> DISCRETA (não importante)
+doc.getElementById('pac-sexo').value = 'F';
+doc.getElementById('m-massa').value = '142';
+doc.getElementById('m-erp').value = '0,46';
+doc.getElementById('m-siv').value = '12'; doc.getElementById('m-pp').value = '12';
+window.autoFillFromMeasures();
+const veEspF = (doc.querySelector('input[name="ve-esp"]:checked') || {}).value;
+const okF = veEspF === 'hve-concentrica-disc';
+console.log(`${okF ? 'PASS' : 'FAIL'}  Mulher parede 12mm + massa 142 -> concêntrica discreta (obtido=${veEspF})`);
+okF ? pass++ : fail++;
+
+// ERP no limite exato 0,42 com massa normal -> remodelamento (regra ≥0,42)
+doc.getElementById('pac-sexo').value = 'F';
+doc.getElementById('m-massa').value = '90'; doc.getElementById('m-erp').value = '0,42';
+window.autoFillFromMeasures();
+const veEspR = (doc.querySelector('input[name="ve-esp"]:checked') || {}).value;
+const okR = veEspR === 'remodelamento';
+console.log(`${okR ? 'PASS' : 'FAIL'}  ERP 0,42 + massa normal -> remodelamento (obtido=${veEspR})`);
+okR ? pass++ : fail++;
+['m-massa','m-erp','m-siv','m-pp'].forEach(id => doc.getElementById(id).value = '');
+doc.getElementById('pac-sexo').value = '';
 
 // ── Plausibilidade (aviso âmbar, não bloqueia) ──────────────
 setNum('m-siv', '40'); window.checkPlausibility();

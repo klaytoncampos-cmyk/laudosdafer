@@ -211,7 +211,11 @@ Abre em `http://localhost:8788`.
 *Detalhe:*
 - O confirm do botão "✓ Tudo normal" passou a dizer **"Aplicar tudo normal? Isto apaga o que já foi preenchido."** (antes mostrava a mensagem de "novo laudo").
 
-*Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **30 cenários**) cobrindo o GLS (corte, sinal, conclusão), a equivalência do modo revisão, a plausibilidade, a busca e o round-trip do autosave, com confirmação de que o laudo normal padrão continua **byte a byte idêntico**.
+*Correção (HVE — alinhamento ao protocolo da Dra.):*
+- O **grau** da hipertrofia concêntrica passou a ser classificado pela **maior espessura de parede** (septo ou PP), nas faixas por sexo do protocolo dela — **♀**: ≤12 discreta · 13–15 moderada · ≥16 importante; **♂**: ≤13 discreta · 14–16 moderada · ≥17 importante. Antes era pelo excesso de massa (o que classificava errado, ex.: mulher com parede 12mm e massa 142 saía "importante" quando o correto é "discreta").
+- A **ERP** passou a usar **≥0,42** para concêntrica (limite exato incluído). Os cortes de massa (♀>95 · ♂>115 g/m²) e o padrão (concêntrica/excêntrica/remodelamento) seguem iguais.
+
+*Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **32 cenários**) cobrindo o GLS (corte, sinal, conclusão), a equivalência do modo revisão, a plausibilidade, a busca, o round-trip do autosave e a nova graduação da HVE pela espessura de parede, com confirmação de que o laudo normal padrão continua **byte a byte idêntico**.
 
 ---
 
