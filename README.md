@@ -183,6 +183,22 @@ Abre em `http://localhost:8788`.
 
 ## O que tem nessa versão
 
+**Novidades V11 (24/06/2026 — arquivo de laudos por paciente):**
+
+A Dra. pode **salvar laudos no banco dela** e acessá-los de qualquer computador, buscando por paciente.
+
+- **💾 Salvar** (no preview): modal com **nome do paciente (obrigatório)**, data de nascimento, CPF e data do exame (opcionais) — a indicação vem do formulário. Guarda o **laudo editável (snapshot)** + o texto final + os metadados de busca.
+- **📁 Salvos** (barra superior): busca por **nome ou CPF** (sem acento/maiúscula) + filtro por **data**. O mesmo paciente mostra o **histórico** (vários exames em datas diferentes). Ações por laudo: **abrir no editor**, **ver texto**, **excluir**.
+- **Editar um salvo sobrescreve** o mesmo registro (não duplica). "Novo" desvincula.
+- **Backend:** tabela `laudos_salvos` no D1 (criada sozinha no 1º uso — deploy continua sendo só `git push`), endpoints `/api/laudos` (GET busca / POST salvar) e `/api/laudos/:id` (GET / PUT / DELETE), todos atrás do login.
+- **Privacidade:** dado de saúde identificado, atrás de autenticação + HTTPS + criptografia em repouso da Cloudflare; CPF em texto (decisão da Dra.).
+
+*Validação:* `node --check` em todos os arquivos (front + 3 do backend) + suíte jsdom (**49 cenários**, incl. o payload de salvar), laudo normal **byte a byte idêntico**. Os endpoints D1 são verificados ao vivo após o deploy (recurso aditivo — não afeta a geração do laudo).
+
+---
+
+## Versões anteriores
+
 **Novidades V10 (24/06/2026 — rodada de 32 laudos da Santa Casa, aprovadas pela Dra.):**
 
 *Conclusão das valvopatias:*
@@ -204,8 +220,6 @@ Abre em `http://localhost:8788`.
 *Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **47 cenários**) cobrindo cada item novo, com o laudo normal padrão **byte a byte idêntico**.
 
 ---
-
-## Versões anteriores
 
 **Novidades V9 (20/06/2026 — pacote de UX + GLS, aprovado pela Dra.):**
 

@@ -38,6 +38,28 @@ const api = {
   async getStats(days=30) {
     const r = await fetch(`/api/stats?days=${days}`, { credentials:'same-origin' });
     return r.ok ? await r.json() : null;
+  },
+  // ── Arquivo de laudos por paciente ──
+  async listLaudos(q, from, to) {
+    const p = new URLSearchParams();
+    if (q) p.set('q', q); if (from) p.set('from', from); if (to) p.set('to', to);
+    const r = await fetch('/api/laudos?' + p.toString(), { credentials:'same-origin' });
+    return r.ok ? (await r.json()).laudos : [];
+  },
+  async getLaudo(id) {
+    const r = await fetch('/api/laudos/' + id, { credentials:'same-origin' });
+    return r.ok ? (await r.json()).laudo : null;
+  },
+  async saveLaudo(data) {
+    const r = await fetch('/api/laudos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), credentials:'same-origin' });
+    return r.ok ? await r.json() : null;
+  },
+  async updateLaudo(id, data) {
+    const r = await fetch('/api/laudos/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), credentials:'same-origin' });
+    return r.ok;
+  },
+  async deleteLaudo(id) {
+    return fetch('/api/laudos/' + id, { method:'DELETE', credentials:'same-origin' });
   }
 };
 
@@ -93,7 +115,8 @@ const state = {
   compact: true,
   secOpen: {},
   activeSec: null,
-  reviewText: null
+  reviewText: null,
+  savedId: null
 };
 
 function setTipo(t) {
@@ -2110,6 +2133,7 @@ function resetAll(confirmMsg) {
   state.bullseyeActiveState = 'hipocinesia';
   state.manualOverride = {};
   state.reviewText = null;
+  state.savedId = null;
   state.compact = true;
   state.secOpen = {};
   state.activeSec = null;
@@ -2537,7 +2561,7 @@ function autosaveDirty() {
 }
 function escSel(v) { return String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"'); }
 function buildSnapshot() {
-  const snap = { ids: {}, radios: {}, checks: [], mode: Object.assign({}, state.mode), concl: state.concl, tipo: state.tipo, eteTipo: state.eteTipo, bullseye: Object.assign({}, state.bullseye), bullseyeActiveState: state.bullseyeActiveState, manualOverride: Object.assign({}, state.manualOverride), reviewText: state.reviewText };
+  const snap = { ids: {}, radios: {}, checks: [], mode: Object.assign({}, state.mode), concl: state.concl, tipo: state.tipo, eteTipo: state.eteTipo, bullseye: Object.assign({}, state.bullseye), bullseyeActiveState: state.bullseyeActiveState, manualOverride: Object.assign({}, state.manualOverride), reviewText: state.reviewText, savedId: state.savedId };
   document.querySelectorAll('#app input, #app select, #app textarea').forEach(el => {
     if (el.closest('#modal-frases') || el.closest('#modal-stats') || el.closest('#modal-revisar') || el.closest('#search-overlay') || el.id === 'pwd') return;
     if (el.type === 'radio') { if (el.checked && el.name) snap.radios[el.name] = el.value; }
@@ -2572,6 +2596,7 @@ function applySnapshot(snap) {
   state.bullseyeActiveState = snap.bullseyeActiveState || 'hipocinesia';
   state.manualOverride = snap.manualOverride || {};
   state.reviewText = snap.reviewText || null;
+  state.savedId = snap.savedId || null;
   setTipo(state.tipo);
   if (typeof setEteTipo === 'function') setEteTipo(state.eteTipo);
   Object.keys(state.mode).forEach(sec => setMode(sec, state.mode[sec]));
@@ -2609,3 +2634,118 @@ function maybeRestoreAutosave() {
 }
 document.addEventListener('input', scheduleAutosave);
 document.addEventListener('change', scheduleAutosave);
+
+// ════════════════════════════════════════
+// ARQUIVO DE LAUDOS POR PACIENTE — V11
+// Salvar (D1) + buscar/abrir/excluir. Reaproveita o snapshot do autosave.
+// ════════════════════════════════════════
+function todayISO() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+function fmtDateBR(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || '');
+}
+function buildLaudoPayload() {
+  const R = (typeof genReport === 'function') ? genReport() : null;
+  const feve = num('ve-feve');
+  const psapV = parseFloat((document.getElementById('vt-psap').value || '0').replace(',', '.')) || null;
+  return {
+    nome: document.getElementById('save-nome').value.trim(),
+    nascimento: document.getElementById('save-nasc').value || null,
+    cpf: document.getElementById('save-cpf').value || null,
+    data_exame: document.getElementById('save-data').value || null,
+    indicacao: document.getElementById('pac-indic').value || null,
+    tipo: state.tipo,
+    feve, psap: psapV,
+    resumo: R ? R.conclusao : '',
+    texto: buildPlainReport(),
+    snapshot: JSON.stringify(buildSnapshot())
+  };
+}
+function openSalvar() {
+  const indic = document.getElementById('pac-indic').value || '—';
+  document.getElementById('save-indic').textContent = indic;
+  if (!document.getElementById('save-data').value) document.getElementById('save-data').value = todayISO();
+  const hint = document.getElementById('save-edit-hint');
+  if (hint) hint.style.display = state.savedId ? 'block' : 'none';
+  document.getElementById('modal-salvar').classList.add('shown');
+  document.getElementById('save-nome').focus();
+}
+function closeSalvar() { document.getElementById('modal-salvar').classList.remove('shown'); }
+async function confirmarSalvar() {
+  const nome = document.getElementById('save-nome').value.trim();
+  if (!nome) { document.getElementById('save-nome').focus(); return; }
+  const btn = document.getElementById('btn-save-confirm');
+  btn.textContent = 'Salvando...';
+  const payload = buildLaudoPayload();
+  let ok = false;
+  if (state.savedId) {
+    ok = await api.updateLaudo(state.savedId, payload);
+  } else {
+    const res = await api.saveLaudo(payload);
+    if (res && res.id) { state.savedId = res.id; ok = true; }
+  }
+  btn.textContent = ok ? '✓ Salvo!' : 'Salvar';
+  if (ok) { if (typeof clearAutosave === 'function') clearAutosave(); setTimeout(() => { closeSalvar(); btn.textContent = 'Salvar'; }, 800); }
+  else setTimeout(() => { btn.textContent = 'Salvar'; }, 1500);
+}
+
+let buscaTimer = null;
+function openBuscar() {
+  document.getElementById('busca-input').value = '';
+  document.getElementById('busca-from').value = '';
+  document.getElementById('busca-to').value = '';
+  document.getElementById('modal-buscar').classList.add('shown');
+  renderBusca();
+  document.getElementById('busca-input').focus();
+}
+function closeBuscar() { document.getElementById('modal-buscar').classList.remove('shown'); }
+function scheduleBusca() { clearTimeout(buscaTimer); buscaTimer = setTimeout(renderBusca, 250); }
+async function renderBusca() {
+  const list = document.getElementById('busca-results');
+  const q = document.getElementById('busca-input').value.trim();
+  const from = document.getElementById('busca-from').value;
+  const to = document.getElementById('busca-to').value;
+  list.innerHTML = '<div class="busca-empty">Buscando...</div>';
+  const laudos = await api.listLaudos(q, from, to);
+  if (!laudos.length) { list.innerHTML = '<div class="busca-empty">Nenhum laudo encontrado.</div>'; return; }
+  list.innerHTML = laudos.map(l => {
+    const d = l.data_exame ? new Date(l.data_exame).toLocaleDateString('pt-BR') : '';
+    const sub = [fmtDateBR(l.nascimento), l.indicacao, (l.feve != null ? 'FEVE ' + l.feve + '%' : '')].filter(Boolean).map(escHtml).join(' · ');
+    return `<div class="busca-row">
+      <div class="busca-main"><div class="busca-nome">${escHtml(l.nome)}</div><div class="busca-sub">${sub}</div></div>
+      <div class="busca-meta">${d}<br><span>${escHtml(l.tipo || '')}</span></div>
+      <div class="busca-acts">
+        <button title="Abrir no editor" onclick="abrirLaudoSalvo(${l.id})">✏️</button>
+        <button title="Ver texto" onclick="verLaudoSalvo(${l.id})">👁</button>
+        <button title="Excluir" class="del" onclick="excluirLaudoSalvo(${l.id})">🗑</button>
+      </div></div>`;
+  }).join('');
+}
+async function abrirLaudoSalvo(id) {
+  const l = await api.getLaudo(id);
+  if (!l) return;
+  try { applySnapshot(JSON.parse(l.snapshot)); } catch (e) {}
+  state.savedId = id;
+  closeBuscar();
+  document.getElementById('preview-meta').textContent = 'laudo salvo carregado';
+}
+async function verLaudoSalvo(id) {
+  const l = await api.getLaudo(id);
+  if (!l) return;
+  state.reviewText = l.texto;
+  document.getElementById('revisar-text').value = l.texto;
+  closeBuscar();
+  document.getElementById('modal-revisar').classList.add('shown');
+}
+async function excluirLaudoSalvo(id) {
+  if (!confirm('Excluir este laudo salvo? Esta ação não pode ser desfeita.')) return;
+  await api.deleteLaudo(id);
+  if (state.savedId === id) state.savedId = null;
+  renderBusca();
+}

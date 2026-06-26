@@ -80,6 +80,33 @@ CREATE TABLE IF NOT EXISTS laudo_log (
 
 CREATE INDEX IF NOT EXISTS idx_laudo_log_created ON laudo_log(created_at DESC);
 
+-- ══════════════════════
+-- LAUDOS SALVOS (arquivo da Dra. — busca por paciente)
+-- ══════════════════════
+
+CREATE TABLE IF NOT EXISTS laudos_salvos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nome TEXT NOT NULL,
+  nome_busca TEXT NOT NULL,
+  nascimento TEXT,
+  cpf TEXT,
+  cpf_busca TEXT,
+  data_exame INTEGER NOT NULL,
+  indicacao TEXT,
+  tipo TEXT,
+  feve REAL,
+  psap REAL,
+  resumo TEXT,
+  texto TEXT NOT NULL,
+  snapshot TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_laudos_salvos_nome ON laudos_salvos(nome_busca);
+CREATE INDEX IF NOT EXISTS idx_laudos_salvos_cpf ON laudos_salvos(cpf_busca);
+CREATE INDEX IF NOT EXISTS idx_laudos_salvos_data ON laudos_salvos(data_exame DESC);
+
 -- ════════════════════════════════════════════════════════════
 -- SEED — FRASES PRONTAS PADRÃO
 -- ════════════════════════════════════════════════════════════

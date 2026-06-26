@@ -251,6 +251,24 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
 .search-item.active,.search-item:hover{background:var(--teal-pale);color:var(--teal2)}
 .search-item .si-num{width:20px;height:20px;border-radius:5px;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
 .search-hint{padding:8px 16px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);display:flex;gap:14px}
+.btn-salvar{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-salvar:hover{background:var(--navy2)}
+[data-theme="dark"] .btn-salvar{background:var(--teal2)}
+.busca-bar{display:flex;flex-direction:column;gap:9px;margin-bottom:4px}
+.busca-dates{display:flex;gap:9px;align-items:center;font-size:12px;color:var(--muted)}
+.busca-dates input{flex:1;border:1.5px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12.5px;background:var(--card);color:var(--text);font-family:'Inter',sans-serif}
+.busca-results{max-height:52vh;overflow-y:auto;margin-top:6px}
+.busca-empty{padding:24px;text-align:center;color:var(--muted);font-size:12.5px}
+.busca-row{display:flex;align-items:center;gap:11px;padding:10px 4px;border-top:1px solid var(--border)}
+.busca-main{flex:1;min-width:0}
+.busca-nome{font-weight:600;font-size:13.5px;color:var(--text)}
+.busca-sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.busca-meta{font-size:11.5px;color:var(--text2);text-align:right;white-space:nowrap;line-height:1.4}
+.busca-meta span{color:var(--muted)}
+.busca-acts{display:flex;gap:3px;flex-shrink:0}
+.busca-acts button{background:transparent;border:1px solid var(--border2);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:13px}
+.busca-acts button:hover{border-color:var(--teal)}
+.busca-acts button.del:hover{border-color:var(--danger)}
 </style>
 </head>
 <body data-theme="light" data-density="comfortable">
@@ -287,6 +305,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
           <button onclick="aplicarTemplate('endocardite')">Endocardite<span class="dd-desc">Vegetação + prótese</span></button>
         </div>
       </div>
+      <button class="tb-btn" onclick="openBuscar()">📁 Salvos</button>
       <button class="tb-btn" onclick="openFrases()">📚 Frases</button>
       <button class="tb-btn" onclick="openStats()">📊 Stats</button>
       <button class="tb-btn icon" onclick="toggleTheme()" title="Tema">🌓</button>
@@ -1187,7 +1206,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
     </div>
 
     <div class="preview-pane">
-      <div class="preview-head"><h2>Laudo gerado</h2><div style="display:flex;align-items:center;gap:10px;margin-left:auto"><div class="meta" id="preview-meta">— em tempo real —</div><button class="btn-revisar" onclick="openRevisar()" title="Abrir o laudo em modo editável para revisão">📝 Revisar</button></div></div>
+      <div class="preview-head"><h2>Laudo gerado</h2><div style="display:flex;align-items:center;gap:10px;margin-left:auto"><div class="meta" id="preview-meta">— em tempo real —</div><button class="btn-salvar" onclick="openSalvar()" title="Salvar no arquivo do paciente">💾 Salvar</button><button class="btn-revisar" onclick="openRevisar()" title="Abrir o laudo em modo editável para revisão">📝 Revisar</button></div></div>
       <div class="preview-body" id="preview-body"></div>
     </div>
   </div>
@@ -1237,6 +1256,39 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
         <textarea id="revisar-text" oninput="onRevisarEdit()" spellcheck="true"></textarea>
       </div>
       <div class="modal-foot"><div class="hint" style="margin-right:auto" id="revisar-hint">Edite à vontade. "Copiar" leva o texto já com suas edições.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeRevisar()">Fechar</button><button class="btn-revisar" id="btn-revisar-copy" onclick="copyRevisar()">Copiar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-salvar">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-head"><h3>💾 Salvar laudo</h3><button class="modal-close" onclick="closeSalvar()">×</button></div>
+      <div class="modal-body">
+        <div class="fld" style="margin-bottom:10px"><label>Nome do paciente *</label><input id="save-nome" type="text" placeholder="Nome completo"></div>
+        <div class="field-row cols-2">
+          <div class="fld"><label>Data de nascimento</label><input id="save-nasc" type="date"></div>
+          <div class="fld"><label>CPF (opcional)</label><input id="save-cpf" type="text" placeholder="000.000.000-00"></div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="fld"><label>Data do exame</label><input id="save-data" type="date"></div>
+          <div class="fld"><label>Indicação (auto)</label><div id="save-indic" style="padding:8px 10px;font-size:13px;color:var(--text2);border:1.5px solid var(--border2);border-radius:6px;background:var(--surface);min-height:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div></div>
+        </div>
+        <div class="hint" id="save-edit-hint" style="display:none;color:var(--warn)">Editando um laudo já salvo — "Salvar" vai sobrescrevê-lo.</div>
+      </div>
+      <div class="modal-foot"><div class="hint" style="margin-right:auto">Guarda o laudo editável + texto + busca.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeSalvar()">Cancelar</button><button class="btn-salvar" id="btn-save-confirm" onclick="confirmarSalvar()">Salvar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-buscar">
+    <div class="modal" style="max-width:620px">
+      <div class="modal-head"><h3>📁 Laudos salvos</h3><button class="modal-close" onclick="closeBuscar()">×</button></div>
+      <div class="modal-body">
+        <div class="busca-bar">
+          <input class="frase-search" id="busca-input" placeholder="Buscar por nome ou CPF..." oninput="scheduleBusca()" style="margin-bottom:0">
+          <div class="busca-dates"><span>De</span><input id="busca-from" type="date" onchange="renderBusca()"><span>até</span><input id="busca-to" type="date" onchange="renderBusca()"></div>
+        </div>
+        <div class="busca-results" id="busca-results"></div>
+      </div>
+      <div class="modal-foot"><div class="hint" style="margin-right:auto">Busca sem acento. O mesmo paciente mostra o histórico.</div><button class="tb-btn" style="background:var(--bg);color:var(--text)" onclick="closeBuscar()">Fechar</button></div>
     </div>
   </div>
 </div>

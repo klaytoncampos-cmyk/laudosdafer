@@ -262,5 +262,18 @@ const okSnap = snapBefore === snapAfter;
 console.log(`${okSnap ? 'PASS' : 'FAIL'}  Autosave: snapshot/restore preserva o laudo`);
 okSnap ? pass++ : fail++;
 
+// ── Arquivo: payload de salvar bem-formado ──
+doc.getElementById('save-nome').value = 'Fulano de Tal';
+doc.getElementById('save-nasc').value = '1950-05-10';
+doc.getElementById('pac-indic').value = 'IC';
+const payload = window.buildLaudoPayload();
+const snapObj = (() => { try { return JSON.parse(payload.snapshot); } catch (e) { return null; } })();
+const okPayload = payload.nome === 'Fulano de Tal' && payload.nascimento === '1950-05-10' &&
+  payload.indicacao === 'IC' && typeof payload.texto === 'string' && payload.texto.length > 0 &&
+  snapObj && snapObj.ids;
+console.log(`${okPayload ? 'PASS' : 'FAIL'}  Arquivo: payload de salvar (nome + texto + snapshot)`);
+okPayload ? pass++ : fail++;
+doc.getElementById('save-nome').value = ''; doc.getElementById('save-nasc').value = ''; doc.getElementById('pac-indic').value = '';
+
 console.log(`\n${pass} passaram, ${fail} falharam`);
 process.exit(fail ? 1 : 0);
