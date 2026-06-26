@@ -183,6 +183,30 @@ Abre em `http://localhost:8788`.
 
 ## O que tem nessa versão
 
+**Novidades V10 (24/06/2026 — rodada de 32 laudos da Santa Casa, aprovadas pela Dra.):**
+
+*Conclusão das valvopatias:*
+- O refluxo valvar passa a sair na conclusão como **"Insuficiência [valva] [grau] ([causa])"** (ex.: "Insuficiência mitral importante (secundária)", "Insuficiência aórtica importante (ectasia da aorta)", "Insuficiência tricúspide moderada (secundária)"), no lugar de "Refluxo [grau] [valva]". A causa entre parênteses sai como "(secundária)", "(ectasia da aorta)" ou é omitida quando não há causa marcada. O corpo do laudo continua usando "refluxo".
+
+*Conclusão — cavidade do VE:*
+- A conclusão passa a incluir o aumento da cavidade do VE: **"Aumento [discreto/moderado/importante] do ventrículo esquerdo."**
+
+*Vocabulário novo:*
+- Septo: **"Retificação diastólica do septo interventricular devido sobrecarga de volume."** (além da de sobrecarga de pressão à direita).
+- Causa do refluxo aórtico: **"(secundário a ectasia da aorta)"** no corpo, **"(ectasia da aorta)"** na conclusão.
+- Microbolhas negativa **com manobra de Valsalva**: "...sem o surgimento de microbolhas nas cavidades esquerdas **em repouso e após manobra de Valsalva**. Ausência de evidência..." (4ª opção, ao lado de "Negativa" em repouso).
+
+*Espessamento biventricular (padrão infiltrativo/amiloidose):*
+- Nova opção no Ventrículo Direito: **"Aumento simétrico da espessura miocárdica (Xmm)."** Quando há espessamento no VE **e** no VD, a conclusão sai como **"Aumento da espessura miocárdica biventricular."**
+
+*Não implementado (decisão da Dra. nesta rodada):* citar paredes específicas na conclusão da motilidade (mantém "vide laudo"), nitroprussiato/outras drogas vasoativas, janela subcostal limitada, e ajuste dos cortes de geometria (mantidos estritos — ela sobrescreve nos borderlines).
+
+*Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **47 cenários**) cobrindo cada item novo, com o laudo normal padrão **byte a byte idêntico**.
+
+---
+
+## Versões anteriores
+
 **Novidades V9 (20/06/2026 — pacote de UX + GLS, aprovado pela Dra.):**
 
 *Strain longitudinal global (GLS):*
@@ -221,8 +245,6 @@ Abre em `http://localhost:8788`.
 *Validação:* `node --check` + suíte jsdom (`test_laudos.js`, **36 cenários**) cobrindo o GLS (corte, sinal, conclusão), a equivalência do modo revisão, a plausibilidade, a busca, o round-trip do autosave, a graduação da HVE pela espessura de parede e a hipocinesia difusa quando a FEVE está reduzida, com confirmação de que o laudo normal padrão continua **byte a byte idêntico**.
 
 ---
-
-## Versões anteriores
 
 **Novidades V8 (20/06/2026 — rodada de 17 laudos da Santa Casa, aprovadas pela Dra.):**
 

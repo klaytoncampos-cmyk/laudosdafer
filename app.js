@@ -1142,6 +1142,13 @@ function genReport() {
   const vdS = num('vd-s');
   if (vdS !== null) vdTxt += ` Onda S' = ${fmt(vdS, 1)}cm/s.`;
   if (vdObs.length) vdTxt += ' ' + vdObs.join(' ');
+  // #9 — espessamento miocárdico do VD (padrão infiltrativo/amiloidose)
+  const vdEspess = document.getElementById('vd-espess') && document.getElementById('vd-espess').checked;
+  if (vdEspess) {
+    const vdEspMm = num('vd-espess-mm');
+    vdTxt += ` Aumento simétrico da espessura miocárdica${vdEspMm !== null ? ` (${fmt(vdEspMm, Number.isInteger(vdEspMm) ? 0 : 1)}mm)` : ''}.`;
+    altered.push('vd-espess');
+  }
   R.sections.push({ lbl:'VENTRÍCULO DIREITO', txt:vdTxt });
 
   // VM
@@ -1230,6 +1237,8 @@ function genReport() {
   const micro = getRadio('septo-micro');
   if (micro === 'negativa') {
     septoTxt += ' Infusão de solução salina agitada evidenciou opacificação adequada das cavidades direitas, sem o surgimento de microbolhas nas cavidades esquerdas em repouso. Ausência de evidência ecocardiográfica de comunicação interatrial (shunt direita-esquerda).';
+  } else if (micro === 'negativa-valsalva') {
+    septoTxt += ' Infusão de solução salina agitada evidenciou opacificação adequada das cavidades direitas, sem o surgimento de microbolhas nas cavidades esquerdas em repouso e após manobra de Valsalva. Ausência de evidência ecocardiográfica de comunicação interatrial (shunt direita-esquerda).';
   } else if (micro === 'positiva') {
     septoTxt += ' Pesquisa de shunt intracardíaco com contraste salino agitado (microbolhas): presença de passagem de microbolhas do lado direito para o lado esquerdo das cavidades cardíacas.';
     altered.push('septo:micro-pos');
@@ -1612,6 +1621,7 @@ function genAutoConcl(altered) {
   const veSist = getRadio('ve-sist');
   const veDiast = getRadio('ve-diast');
 
+  const vdEspessC = document.getElementById('vd-espess') && document.getElementById('vd-espess').checked;
   if (veEsp && veEsp !== 'preservada') {
     const map = {
       'remodelamento':'Remodelamento concêntrico',
@@ -1623,7 +1633,17 @@ function genAutoConcl(altered) {
       'hve-excentrica':'Hipertrofia excêntrica',
       'hve-descritiva':'Aumento moderado e simétrico da espessura miocárdica'
     };
-    if (map[veEsp]) lines.push(map[veEsp]);
+    // #9 — espessamento biventricular (VE + VD) vira frase única na conclusão
+    if (vdEspessC && veEsp !== 'remodelamento') lines.push('Aumento da espessura miocárdica biventricular');
+    else if (map[veEsp]) lines.push(map[veEsp]);
+  } else if (vdEspessC) {
+    lines.push('Aumento da espessura miocárdica do ventrículo direito');
+  }
+  // #2 — aumento da cavidade do VE na conclusão
+  const veCavC = getRadio('ve-cav');
+  if (veCavC && veCavC !== 'normal') {
+    const mapCav = { 'aumento-disc':'Aumento discreto', 'aumento-mod':'Aumento moderado', 'aumento-imp':'Aumento importante' };
+    if (mapCav[veCavC]) lines.push(`${mapCav[veCavC]} do ventrículo esquerdo`);
   }
   if (veSist && veSist !== 'preservada') {
     const map = { 'disc-reduzida':'Disfunção sistólica discreta do VE', 'mod-reduzida':'Disfunção sistólica moderada do VE', 'imp-reduzida':'Disfunção sistólica importante do VE' };
@@ -1667,6 +1687,15 @@ function genAutoConcl(altered) {
   const vaEst = getRadio('va-est');
   const vaDupla = altered.includes('va') && vaRefl && vaEst && vaEst !== 'Esclerose valvar';
 
+  // #1 — conclusão das valvopatias: "Insuficiência [valva] [grau] ([causa])"
+  const GRAU_FEM = { 'Refluxo mínimo':'mínima', 'Refluxo discreto':'discreta', 'Refluxo discreto a moderado':'discreta a moderada', 'Refluxo moderado':'moderada', 'Refluxo moderado a importante':'moderada a importante', 'Refluxo importante':'importante' };
+  const vmCausaC = (getRadio('vm-refl-causa') || (document.getElementById('vm-refl-sec') && document.getElementById('vm-refl-sec').checked)) ? 'secundária' : null;
+  const vaCausaRaw = getRadio('va-refl-causa');
+  const vaCausaC = vaCausaRaw ? (/ectasia/.test(vaCausaRaw) ? 'ectasia da aorta' : (/degenerativa/.test(vaCausaRaw) ? 'etiologia degenerativa' : 'secundária')) : null;
+  const vtCausaRaw = getRadio('vt-refl-causa');
+  const vtCausaC = vtCausaRaw ? (vtCausaRaw === 'funcional' ? 'funcional' : 'secundária') : null;
+  const insuf = (valva, refl, causa) => `Insuficiência ${valva} ${GRAU_FEM[refl] || refl.replace('Refluxo ', '')}` + (causa ? ` (${causa})` : '');
+
   if (vmDupla) {
     const grauEst = vmEst.replace('Estenose ', '');
     const grauRefl = vmRefl.replace('Refluxo ', '');
@@ -1676,7 +1705,7 @@ function genAutoConcl(altered) {
     lines.push(`Dupla lesão valvar mitral ${grauFem} (etiologia degenerativa senil)`);
   } else if (altered.includes('vm')) {
     if (vmEst) lines.push(`${vmEst} mitral`);
-    if (vmRefl && vmRefl !== 'Refluxo mínimo') lines.push(`${vmRefl} mitral`);
+    if (vmRefl && vmRefl !== 'Refluxo mínimo') lines.push(insuf('mitral', vmRefl, vmCausaC));
   }
 
   if (altered.includes('vm-prot')) {
@@ -1693,7 +1722,7 @@ function genAutoConcl(altered) {
     lines.push(`Dupla lesão valvar aórtica ${grauFem} (etiologia degenerativa senil)`);
   } else if (altered.includes('va')) {
     if (vaEst && vaEst !== 'Esclerose valvar') lines.push(`${vaEst} aórtica`);
-    if (vaRefl && vaRefl !== 'Refluxo mínimo') lines.push(`${vaRefl} aórtico`);
+    if (vaRefl && vaRefl !== 'Refluxo mínimo') lines.push(insuf('aórtica', vaRefl, vaCausaC));
   }
 
   if (altered.includes('va-prot')) {
@@ -1704,7 +1733,7 @@ function genAutoConcl(altered) {
   if (altered.includes('va-bic')) lines.push('Valva aórtica bicúspide');
   if (altered.includes('vt')) {
     const refl = getRadio('vt-refl');
-    if (refl && refl !== 'Refluxo mínimo' && refl !== 'Refluxo discreto') lines.push(`${refl} tricúspide`);
+    if (refl && refl !== 'Refluxo mínimo' && refl !== 'Refluxo discreto') lines.push(insuf('tricúspide', refl, vtCausaC));
   }
   if (altered.some(a => a.startsWith('peri:'))) {
     const p = altered.find(a => a.startsWith('peri:')).split(':')[1];

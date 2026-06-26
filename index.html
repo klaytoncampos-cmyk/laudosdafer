@@ -449,6 +449,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento paradoxal do septo interventricular."><span>Mov. paradoxal</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Movimento paradoxal (retificação) do septo interventricular."><span>Mov. paradoxal (retificação)</span></label>
             <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Septo interventricular retificado (sobrecarga pressórica à direita)."><span>Retificado (sobrec. D)</span></label>
+            <label class="opt-chip"><input type="radio" name="ve-septomorf" value="Retificação diastólica do septo interventricular devido sobrecarga de volume."><span>Retific. diastólica (sobrec. volume)</span></label>
           </div>
           <div class="divider"></div>
           <span class="opt-label">Cavidade ventricular</span>
@@ -620,6 +621,14 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
             <div class="fld fld-suffix"><label>Onda S' (opcional)</label><input id="vd-s" type="number" step="0.1" placeholder="cm/s"><span class="suffix">cm/s</span></div>
           </div>
           <div class="hint">Ref.: TAPSE &lt; 17mm ou onda S' &lt; 9,5 cm/s sugerem disfunção sistólica do VD (referência para a técnica — não sai no laudo).</div>
+          <span class="opt-label" style="margin-top:10px">Espessamento miocárdico (infiltrativo / amiloidose)</span>
+          <div class="opts-grid">
+            <label class="opt-chip"><input type="checkbox" id="vd-espess"><span>Aumento simétrico da espessura do VD</span></label>
+          </div>
+          <div class="field-row cols-2">
+            <div class="fld fld-suffix"><label>Espessura do VD (opcional)</label><input id="vd-espess-mm" type="number" placeholder="mm"><span class="suffix">mm</span></div>
+            <div class="fld" style="display:flex;align-items:flex-end"><div class="hint">Com espessura também no VE, a conclusão sai "biventricular".</div></div>
+          </div>
         </div>
       </div>
 
@@ -848,6 +857,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value=""><span>Não especificar</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value="de etiologia degenerativa"><span>Etiologia degenerativa</span></label>
               <label class="opt-chip"><input type="radio" name="va-refl-causa" value="secundário à dilatação da raiz da aorta"><span>Sec. dilatação da raiz</span></label>
+              <label class="opt-chip"><input type="radio" name="va-refl-causa" value="secundário a ectasia da aorta"><span>Sec. ectasia da aorta</span></label>
             </div>
             <div class="field-row cols-2">
               <div class="fld fld-suffix"><label>PHT do refluxo (opcional)</label><input id="va-refl-pht" type="number" placeholder="ms"><span class="suffix">ms</span></div>
@@ -1029,6 +1039,7 @@ input.sp-indic-input:focus{border-color:var(--teal);background:var(--card)}
           <div class="opts-grid">
             <label class="opt-chip sel"><input type="radio" name="septo-micro" value="" checked><span>Não realizada</span></label>
             <label class="opt-chip"><input type="radio" name="septo-micro" value="negativa"><span>Negativa</span></label>
+            <label class="opt-chip"><input type="radio" name="septo-micro" value="negativa-valsalva"><span>Negativa (Valsalva)</span></label>
             <label class="opt-chip"><input type="radio" name="septo-micro" value="positiva"><span>Positiva</span></label>
           </div>
           <div class="divider"></div>

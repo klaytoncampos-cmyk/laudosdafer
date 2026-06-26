@@ -190,6 +190,43 @@ hasNot('Não usa mais "segmentar preservada" com FEVE baixa', 'Contratilidade mi
 setNum('ve-feve', ''); selRadio('ve-mot', 'preservada'); window.onMotilidadeChange();
 doc.getElementById('pac-sexo').value = '';
 
+// ── #1/#7 Conclusão "Insuficiência [valva] [grau] ([causa])" ──
+selRadio('va-est', ''); selRadio('vm-est', '');
+window.setMode('vm', 'alterado'); selRadio('vm-refl', 'Refluxo importante'); selRadio('vm-refl-causa', 'secundário à dilatação do anel');
+window.setMode('va', 'alterado'); selRadio('va-refl', 'Refluxo importante'); selRadio('va-refl-causa', 'secundário a ectasia da aorta');
+window.setMode('vt', 'alterado'); selRadio('vt-refl', 'Refluxo moderado'); selRadio('vt-refl-causa', 'secundário a dilatação do anel');
+has('#1 Insuficiência mitral importante (secundária)', 'Insuficiência mitral importante (secundária)');
+has('#1 Insuficiência aórtica importante (ectasia da aorta)', 'Insuficiência aórtica importante (ectasia da aorta)');
+has('#1 Insuficiência tricúspide moderada (secundária)', 'Insuficiência tricúspide moderada (secundária)');
+hasNot('#1 não usa mais "Refluxo importante mitral"', 'Refluxo importante mitral');
+has('#7 corpo: secundário a ectasia da aorta', '(secundário a ectasia da aorta)');
+selRadio('va-refl-causa', 'de etiologia degenerativa');
+has('#1 aórtica etiologia degenerativa', 'Insuficiência aórtica importante (etiologia degenerativa)');
+window.setMode('vm', 'normal'); window.setMode('va', 'normal'); window.setMode('vt', 'normal');
+
+// ── #2 Aumento da cavidade do VE na conclusão ──
+selRadio('ve-cav', 'aumento-imp');
+has('#2 Aumento importante do VE na conclusão', 'Aumento importante do ventrículo esquerdo');
+selRadio('ve-cav', 'normal');
+
+// ── #4 Septo por sobrecarga de volume ──
+selRadio('ve-septomorf', 'Retificação diastólica do septo interventricular devido sobrecarga de volume.');
+has('#4 Septo sobrecarga de volume', 'Retificação diastólica do septo interventricular devido sobrecarga de volume.');
+selRadio('ve-septomorf', '');
+
+// ── #8 Microbolhas negativa com Valsalva ──
+selRadio('septo-micro', 'negativa-valsalva');
+has('#8 Microbolhas Valsalva', 'em repouso e após manobra de Valsalva');
+hasNot('#8 não é a frase "em repouso." sozinha', 'esquerdas em repouso. Ausência');
+selRadio('septo-micro', '');
+
+// ── #9 Espessamento biventricular (amiloidose) ──
+selRadio('ve-esp', 'hve-descritiva');
+doc.getElementById('vd-espess').checked = true; setNum('vd-espess-mm', '8');
+has('#9 corpo: espessura do VD (8mm)', 'Aumento simétrico da espessura miocárdica (8mm).');
+has('#9 conclusão: biventricular', 'Aumento da espessura miocárdica biventricular');
+doc.getElementById('vd-espess').checked = false; setNum('vd-espess-mm', ''); selRadio('ve-esp', 'preservada');
+
 // ── Plausibilidade (aviso âmbar, não bloqueia) ──────────────
 setNum('m-siv', '40'); window.checkPlausibility();
 const sivBad = doc.getElementById('m-siv').closest('.fld').classList.contains('fld-implausible');
